@@ -7,12 +7,14 @@ DLL.cpp
 
 Scores.txt
 
-3. コンパイル:
+2. コンパイル:
+
 コマンド: g++ -o DLL DLL.cpp
 
 期待される出力: DLL
 
-4. 実行:
+3. 実行:
+
 コマンド: ./DLL
 
 期待される出力: (SampleOutput.txt に記述されているとおり)
