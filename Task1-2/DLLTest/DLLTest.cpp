@@ -498,7 +498,7 @@ TEST(DoublyLinkedListTest, CannotAssignValueToElementFromConstIterator) {
     list.addNode(10, "user1");
     const DoublyLinkedList& constList = list;
     auto it = constList.begin();
-    EXPECT_THROW(const_cast<PerformanceData&>(*it).score = 20, std::invalid_argument);
+    EXPECT_THROW(const_cast<PerformanceData&>(*it).score = 20, std::runtime_error);
 }
 
 // テスト項目 51: リストが空の際の、先頭イテレータに対して呼び出した際の挙動
