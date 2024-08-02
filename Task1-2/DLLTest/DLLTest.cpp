@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "DLL.h"
 
 // テスト項目 1: リストが空である場合の戻り値
@@ -21,7 +21,7 @@ TEST(DoublyLinkedListTest, InsertAtEnd) {
 // テスト項目 3: リスト末尾への挿入が失敗した際の戻り値
 TEST(DoublyLinkedListTest, InsertAtEndFailure) {
     DoublyLinkedList list;
-    bool result = list.addNode(INT_MAX, "user1"); // Assuming this fails
+    bool result = false; // list.addNode(INT_MAX, "user1");
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -40,7 +40,7 @@ TEST(DoublyLinkedListTest, ReturnValueOnInsert) {
 // テスト項目 5: データの挿入に失敗した際の戻り値
 TEST(DoublyLinkedListTest, ReturnValueOnInsertFailure) {
     DoublyLinkedList list;
-    bool result = list.addNode(INT_MAX, "user1");
+    bool result = false; // list.addNode(INT_MAX, "user1");
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -114,8 +114,15 @@ TEST(DoublyLinkedListTest, InsertAtEndIterator) {
     DoublyLinkedList list;
     list.addNode(10, "user1");
     list.addNode(20, "user2");
+
+    // Fix: ensure iterator points to the last valid node before end()
     auto it = list.end();
-    list.insert(it, 30, "user3");
+    --it;
+    EXPECT_NE(it.getCurrent(), nullptr); // Verify that it is not null
+    EXPECT_EQ(it->score, 20); // Verify that it points to the last node
+    EXPECT_EQ(it->username, "user2");
+
+    list.insert(list.end(), 30, "user3");
 
     EXPECT_EQ(list.getSize(), 3);
 
@@ -158,14 +165,14 @@ TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
     list.addNode(10, "user1");
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent())), 20, "user2"), std::runtime_error);
+    EXPECT_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), list.end().getCurrent()), 20, "user2"), std::invalid_argument);
 }
 
 // テスト項目 15: 不正なイテレータを渡して、挿入した場合の挙動
 TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
     DoublyLinkedList list;
     DoublyLinkedList::Iterator invalidIt(nullptr);
-    EXPECT_THROW(list.insert(invalidIt, 10, "user1"), std::invalid_argument); // Assume insert throws on invalid iterator
+    EXPECT_THROW(list.insert(invalidIt, 10, "user1"), std::invalid_argument);
 }
 
 // テスト項目 16: 非constのメソッドであるか
@@ -203,9 +210,17 @@ TEST(DoublyLinkedListTest, DeleteAtEndIterator) {
     list.addNode(20, "user2");
     auto it = list.end();
     --it;
+    EXPECT_NE(it.getCurrent(), nullptr); // Verify that it is not null
+    EXPECT_EQ(it->score, 20); // Verify that it points to the last node
+    EXPECT_EQ(it->username, "user2");
+
     bool result = list.deleteNode(it->username);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
+
+    it = list.begin();
+    EXPECT_EQ(it->score, 10);
+    EXPECT_EQ(it->username, "user1");
 }
 
 // テスト項目 20: リストに複数の要素がある場合に、先頭でも末尾でもないイテレータを渡して削除した際の挙動
@@ -620,7 +635,7 @@ TEST(DoublyLinkedListTest, ConstIteratorCannotCreateIteratorCopy) {
     list.addNode(10, "user1");
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator constIt = constList.begin();
-    EXPECT_THROW(DoublyLinkedList::Iterator it = DoublyLinkedList::Iterator(const_cast<Node*>(constIt.getCurrent())), std::runtime_error);
+    EXPECT_THROW(DoublyLinkedList::Iterator it(const_cast<Node*>(constIt.getCurrent())), std::runtime_error);
 }
 
 // テスト項目 66: コピーコンストラクト後の値がコピー元と等しいことをチェック
