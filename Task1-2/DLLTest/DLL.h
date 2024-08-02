@@ -64,7 +64,7 @@ public:
         return size;
     }
 
-    bool deleteNode(const std::string& username) noexcept {
+    bool deleteNode(const std::string& username) {
         Node* current = head;
         while (current) {
             if (current->data.username == username) {
@@ -101,14 +101,17 @@ public:
     class Iterator {
     private:
         Node* current;
+        Node* tailRef;
     public:
-        explicit Iterator(Node* node = nullptr) : current(node) {}
+        explicit Iterator(Node* node = nullptr, Node* tail = nullptr) : current(node), tailRef(tail) {}
 
         PerformanceData& operator*() {
+            if (!current) throw std::invalid_argument("Dereferencing null iterator");
             return current->data;
         }
 
         PerformanceData* operator->() {
+            if (!current) throw std::invalid_argument("Dereferencing null iterator");
             return &(current->data);
         }
 
@@ -124,7 +127,15 @@ public:
         }
 
         Iterator& operator--() { // Pre-decrement
-            if (current) current = current->prev;
+            if (!current) {
+                current = tailRef;
+            }
+            else if (current->prev) {
+                current = current->prev;
+            }
+            else {
+                throw std::runtime_error("Decrementing null iterator");
+            }
             return *this;
         }
 
@@ -148,24 +159,27 @@ public:
     };
 
     Iterator begin() {
-        return Iterator(head);
+        return Iterator(head, tail);
     }
 
     Iterator end() {
-        return Iterator(nullptr);
+        return Iterator(nullptr, tail);
     }
 
     class ConstIterator {
     private:
         const Node* current;
+        const Node* tailRef;
     public:
-        explicit ConstIterator(const Node* node = nullptr) : current(node) {}
+        explicit ConstIterator(const Node* node = nullptr, const Node* tail = nullptr) : current(node), tailRef(tail) {}
 
         const PerformanceData& operator*() const {
+            if (!current) throw std::invalid_argument("Dereferencing null const iterator");
             return current->data;
         }
 
         const PerformanceData* operator->() const {
+            if (!current) throw std::invalid_argument("Dereferencing null const iterator");
             return &(current->data);
         }
 
@@ -181,7 +195,15 @@ public:
         }
 
         ConstIterator& operator--() { // Pre-decrement
-            if (current) current = current->prev;
+            if (!current) {
+                current = tailRef;
+            }
+            else if (current->prev) {
+                current = current->prev;
+            }
+            else {
+                throw std::runtime_error("Decrementing null const iterator");
+            }
             return *this;
         }
 
@@ -205,11 +227,11 @@ public:
     };
 
     ConstIterator begin() const {
-        return ConstIterator(head);
+        return ConstIterator(head, tail);
     }
 
     ConstIterator end() const {
-        return ConstIterator(nullptr);
+        return ConstIterator(nullptr, tail);
     }
 
     bool insert(Iterator pos, int score, const std::string& username) {
@@ -217,8 +239,20 @@ public:
             return addNode(score, username);
         }
 
-        Node* newNode = new Node{ {score, username}, nullptr, nullptr };
         Node* current = pos.getCurrent();
+        if (!current) throw std::invalid_argument("Invalid iterator position");
+
+        // Ensure the iterator belongs to this list
+        bool valid = false;
+        for (Node* node = head; node != nullptr; node = node->next) {
+            if (node == current) {
+                valid = true;
+                break;
+            }
+        }
+        if (!valid) throw std::invalid_argument("Iterator does not belong to this list");
+
+        Node* newNode = new Node{ {score, username}, nullptr, nullptr };
         Node* prevNode = current->prev;
 
         newNode->next = current;
@@ -233,6 +267,24 @@ public:
         }
 
         return true;
+    }
+
+    // Copy constructor
+    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr) {
+        for (Node* current = other.head; current != nullptr; current = current->next) {
+            addNode(current->data.score, current->data.username);
+        }
+    }
+
+    // Assignment operator
+    DoublyLinkedList& operator=(const DoublyLinkedList& other) {
+        if (this != &other) {
+            clear();
+            for (Node* current = other.head; current != nullptr; current = current->next) {
+                addNode(current->data.score, current->data.username);
+            }
+        }
+        return *this;
     }
 };
 
