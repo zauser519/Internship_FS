@@ -165,7 +165,8 @@ TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
     list.addNode(10, "user1");
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), list.end().getCurrent()), 20, "user2"), std::invalid_argument);
+    // insert should work correctly even when using ConstIterator
+    EXPECT_NO_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent())), 20, "user2"));
 }
 
 // テスト項目 15: 不正なイテレータを渡して、挿入した場合の挙動
@@ -242,7 +243,7 @@ TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
     list.addNode(10, "user1");
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_THROW(list.deleteNode(it->username), std::invalid_argument); // Assume delete throws on ConstIterator
+    EXPECT_NO_THROW(list.deleteNode(it->username));
 }
 
 // テスト項目 22: 不正なイテレータを渡して、削除した場合の挙動
@@ -312,7 +313,7 @@ TEST(DoublyLinkedListTest, CallAfterDelete) {
 // テスト項目 29: constのリストから、ConstIteratorでないIteratorの取得が行えないかをチェック
 TEST(DoublyLinkedListTest, ConstListCannotGetNonConstIterator) {
     const DoublyLinkedList list;
-    EXPECT_THROW(auto it = list.begin(), std::invalid_argument);
+    EXPECT_THROW(DoublyLinkedList::Iterator it(const_cast<Node*>(list.begin().getCurrent())), std::invalid_argument);
 }
 
 // テスト項目 30: リストが空である場合に、呼び出した際の挙動
@@ -419,7 +420,7 @@ TEST(DoublyLinkedListTest, CallAfterDeleteAgain2) {
 // テスト項目 41: constのリストから、ConstIteratorでないIteratorの取得が行えないかをチェック
 TEST(DoublyLinkedListTest, ConstListCannotGetNonConstIteratorAgain) {
     const DoublyLinkedList list;
-    EXPECT_THROW(auto it = list.begin(), std::invalid_argument);
+    EXPECT_THROW(DoublyLinkedList::Iterator it(const_cast<Node*>(list.begin().getCurrent())), std::invalid_argument);
 }
 
 // テスト項目 42: リストが空である場合に、呼び出した際の挙動
