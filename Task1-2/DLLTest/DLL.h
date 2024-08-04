@@ -105,10 +105,13 @@ public:
         head = tail = nullptr;
     }
 
+    class ConstIterator;
+
     class Iterator {
     private:
         Node* current;
         Node* tailRef;
+
     public:
         // コンストラクタ: イテレータの初期化
         explicit Iterator(Node* node = nullptr, Node* tail = nullptr) : current(node), tailRef(tail) {}
@@ -173,25 +176,22 @@ public:
         Node* getCurrent() const {
             return current;
         }
+
+        // ConstIteratorにprivateメンバーへのアクセスを許可
+        friend class ConstIterator;
     };
-
-    // リストの先頭を指すイテレータを取得
-    Iterator begin() {
-        return Iterator(head, tail);
-    }
-
-    // リストの終端を指すイテレータを取得
-    Iterator end() {
-        return Iterator(nullptr, tail);
-    }
 
     class ConstIterator {
     private:
         const Node* current;
-        const Node* tailRef;
+
     public:
         // コンストラクタ: 定数イテレータの初期化
-        explicit ConstIterator(const Node* node = nullptr, const Node* tail = nullptr) : current(node), tailRef(tail) {}
+        explicit ConstIterator(const Node* node = nullptr) : current(node) {}
+
+        // Iteratorを受け取るコンストラクタ
+        ConstIterator(const Iterator& it)
+            : current(it.getCurrent()) {}
 
         // デリファレンス演算子: 現在のデータを取得（定数）
         const PerformanceData& operator*() const {
@@ -220,10 +220,7 @@ public:
 
         // 前置デクリメント演算子: 前のノードに戻る
         ConstIterator& operator--() {
-            if (!current) {
-                current = tailRef;
-            }
-            else if (current->prev) {
+            if (current && current->prev) {
                 current = current->prev;
             }
             else {
@@ -255,14 +252,24 @@ public:
         }
     };
 
+    // リストの先頭を指すイテレータを取得
+    Iterator begin() {
+        return Iterator(head, tail);
+    }
+
+    // リストの終端を指すイテレータを取得
+    Iterator end() {
+        return Iterator(nullptr, tail);
+    }
+
     // リストの先頭を指す定数イテレータを取得
     ConstIterator begin() const {
-        return ConstIterator(head, tail);
+        return ConstIterator(head);
     }
 
     // リストの終端を指す定数イテレータを取得
     ConstIterator end() const {
-        return ConstIterator(nullptr, tail);
+        return ConstIterator(nullptr);
     }
 
     // 指定された位置にノードを挿入
