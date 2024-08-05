@@ -5,6 +5,13 @@
 #include <gtest/gtest.h>
 #include "DLL.h"
 
+// リスト内容を表示する別の機能
+void displayList(const DoublyLinkedList& list) {
+    for (auto it = list.begin(); it != list.end(); ++it) {
+        std::cout << "Score: " << it->score << ", User Name: " << it->username << std::endl;
+    }
+}
+
 // メイン関数
 int main(int argc, char** argv) {
     DoublyLinkedList list;
@@ -19,7 +26,7 @@ int main(int argc, char** argv) {
             if (!(iss >> score >> username)) {
                 break; // エラー処理
             }
-            list.addNode(score, username);
+            list.addNode({ score, username });
         }
         infile.close();
     }
@@ -27,7 +34,7 @@ int main(int argc, char** argv) {
         std::cerr << "ファイルを開けません" << std::endl;
     }
 
-    list.displayList();
+    displayList(list);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
