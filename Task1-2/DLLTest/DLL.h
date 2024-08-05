@@ -20,20 +20,23 @@ class DoublyLinkedList {
 private:
     Node* head;
     Node* tail;
+    bool simulateFailure; // 失敗をシミュレートする
 
 public:
     // コンストラクタ: 空のリストを作成
-    DoublyLinkedList() noexcept : head(nullptr), tail(nullptr) {}
+    DoublyLinkedList() noexcept : head(nullptr), tail(nullptr), simulateFailure(false) {} 
 
-    // デストラクタ: リストをクリア
-    ~DoublyLinkedList() noexcept {
-        clear();
+    void setSimulateFailure(bool value) {
+        simulateFailure = value;
     }
 
     // 新しいノードをリストの末尾に追加
-    bool addNode(int score, const std::string& username) noexcept {
+    bool addNode(const PerformanceData& data) noexcept {
+        if (simulateFailure) { 
+            return false;
+        }
         try {
-            Node* newNode = new Node{ {score, username}, nullptr, nullptr };
+            Node* newNode = new Node{ data, nullptr, nullptr };
             if (!head) {
                 head = tail = newNode;
             }
@@ -45,16 +48,7 @@ public:
             return true;
         }
         catch (std::bad_alloc&) {
-            return false; // メモリ割り当てエラーで挿入失敗をシミュレート
-        }
-    }
-
-    // リストの内容を表示
-    void displayList() const noexcept {
-        Node* current = head;
-        while (current) {
-            std::cout << "スコア: " << current->data.score << ", ユーザー名: " << current->data.username << std::endl;
-            current = current->next;
+            return false;// メモリ割り当てエラーで挿入失敗をシミュレート
         }
     }
 
@@ -70,10 +64,10 @@ public:
     }
 
     // 指定されたユーザー名のノードを削除
-    bool deleteNode(const std::string& username) {
+    bool deleteNode(const PerformanceData& data) {
         Node* current = head;
         while (current) {
-            if (current->data.username == username) {
+            if (current->data.username == data.username) {
                 if (current->prev) {
                     current->prev->next = current->next;
                 }
@@ -155,7 +149,7 @@ public:
             return *this;
         }
 
-        // 後置デクリメント演算子: 前のノードに戻る（古い値を返す）
+        // 後置デクリメント演算子: 前のノードに戻る（古い値を返す)
         Iterator operator--(int) {
             Iterator temp = *this;
             --(*this);
@@ -190,8 +184,7 @@ public:
         explicit ConstIterator(const Node* node = nullptr) : current(node) {}
 
         // Iteratorを受け取るコンストラクタ
-        ConstIterator(const Iterator& it)
-            : current(it.getCurrent()) {}
+        ConstIterator(const Iterator& it) : current(it.getCurrent()) {}
 
         // デリファレンス演算子: 現在のデータを取得（定数）
         const PerformanceData& operator*() const {
@@ -273,10 +266,10 @@ public:
     }
 
     // 指定された位置にノードを挿入
-    bool insert(Iterator pos, int score, const std::string& username) {
+    bool insert(Iterator pos, const PerformanceData& data) {
         // 位置が終端の場合、ノードを末尾に追加
         if (pos == end()) {
-            return addNode(score, username);
+            return addNode(data);
         }
 
         // イテレータが無効またはこのリストに属していない場合、例外を投げる
@@ -297,7 +290,7 @@ public:
         }
 
         Node* current = pos.getCurrent();
-        Node* newNode = new Node{ {score, username}, nullptr, nullptr };
+        Node* newNode = new Node{ data, nullptr, nullptr };
         Node* prevNode = current->prev;
 
         newNode->next = current;
@@ -317,7 +310,7 @@ public:
     // コピーコンストラクタ: 他のリストをコピー
     DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr) {
         for (Node* current = other.head; current != nullptr; current = current->next) {
-            addNode(current->data.score, current->data.username);
+            addNode(current->data);
         }
     }
 
@@ -326,7 +319,7 @@ public:
         if (this != &other) {
             clear();
             for (Node* current = other.head; current != nullptr; current = current->next) {
-                addNode(current->data.score, current->data.username);
+                addNode(current->data);
             }
         }
         return *this;
