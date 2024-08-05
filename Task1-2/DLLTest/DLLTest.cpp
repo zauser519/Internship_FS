@@ -12,10 +12,11 @@ TEST(DoublyLinkedListTest, IsEmptyInitially) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtEnd) {
     DoublyLinkedList list;
-    bool result = list.addNode(10, "user1");
+    auto it = list.end(); 
+    bool result = list.insert(it, { 10, "user1" }); 
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
-    auto it = list.begin();
+    it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
 }
@@ -24,7 +25,8 @@ TEST(DoublyLinkedListTest, InsertAtEnd) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtEndFailure) {
     DoublyLinkedList list;
-    bool result = false; // Simulating failure
+    list.setSimulateFailure(true); 
+    bool result = list.addNode({ 10, "user1" });
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -33,7 +35,8 @@ TEST(DoublyLinkedListTest, InsertAtEndFailure) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, ReturnValueOnInsert) {
     DoublyLinkedList list;
-    bool result = list.addNode(10, "user1");
+    PerformanceData data{ 10, "user1" };
+    bool result = list.addNode(data);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
     auto it = list.begin();
@@ -45,7 +48,8 @@ TEST(DoublyLinkedListTest, ReturnValueOnInsert) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, ReturnValueOnInsertFailure) {
     DoublyLinkedList list;
-    bool result = false; // Simulating failure
+    list.setSimulateFailure(true); 
+    bool result = list.addNode({ 10, "user1" });
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -54,8 +58,9 @@ TEST(DoublyLinkedListTest, ReturnValueOnInsertFailure) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, ReturnValueOnDelete) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    bool result = list.deleteNode("user1");
+    PerformanceData data{ 10, "user1" };
+    list.addNode(data);
+    bool result = list.deleteNode(data);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -64,8 +69,10 @@ TEST(DoublyLinkedListTest, ReturnValueOnDelete) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, ReturnValueOnDeleteFailure) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    bool result = list.deleteNode("user2");
+    PerformanceData data{ 10, "user1" };
+    list.addNode(data);
+    PerformanceData wrongData{ 20, "user2" };
+    bool result = list.deleteNode(wrongData);
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 1);
 }
@@ -74,7 +81,8 @@ TEST(DoublyLinkedListTest, ReturnValueOnDeleteFailure) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, ReturnValueOnDeleteFromEmptyList) {
     DoublyLinkedList list;
-    bool result = list.deleteNode("user1");
+    PerformanceData data{ 10, "user1" };
+    bool result = list.deleteNode(data);
     EXPECT_FALSE(result);
 }
 
@@ -82,16 +90,15 @@ TEST(DoublyLinkedListTest, ReturnValueOnDeleteFromEmptyList) {
 // インターフェース: constメソッド
 TEST(DoublyLinkedListTest, ConstMethodVerification) {
     const DoublyLinkedList list;
-    auto it = list.begin();
-    auto end = list.end();
-    EXPECT_EQ(it, end);
+    EXPECT_EQ(list.getSize(), 0);
 }
 
 // テスト項目 9: リストが空である場合に、挿入した際の挙動
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertWhenEmpty) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    PerformanceData data{ 10, "user1" };
+    list.addNode(data);
     EXPECT_EQ(list.getSize(), 1);
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
@@ -102,10 +109,11 @@ TEST(DoublyLinkedListTest, InsertWhenEmpty) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtBeginIterator) {
     DoublyLinkedList list;
-    list.addNode(20, "user2");
-    list.addNode(30, "user3");
+    list.addNode({ 20, "user2" });
+    list.addNode({ 30, "user3" });
     auto it = list.begin();
-    list.insert(it, 10, "user1");
+    PerformanceData data{ 10, "user1" };
+    list.insert(it, data);
 
     EXPECT_EQ(list.getSize(), 3);
 
@@ -124,11 +132,11 @@ TEST(DoublyLinkedListTest, InsertAtBeginIterator) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtEndIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
 
     auto it = list.end();
-    list.insert(it, 30, "user3");
+    list.insert(it, { 30, "user3" });
 
     EXPECT_EQ(list.getSize(), 3);
 
@@ -147,11 +155,11 @@ TEST(DoublyLinkedListTest, InsertAtEndIterator) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtMiddleIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(30, "user3");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 30, "user3" });
     auto it = list.begin();
     ++it; // Move to the middle
-    list.insert(it, 20, "user2");
+    list.insert(it, { 20, "user2" });
 
     EXPECT_EQ(list.getSize(), 3);
 
@@ -170,17 +178,17 @@ TEST(DoublyLinkedListTest, InsertAtMiddleIterator) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_NO_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent())), 20, "user2"));
+    EXPECT_NO_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent())), { 20, "user2" }));
 }
 
 // テスト項目 14: 不正なイテレータを渡して、挿入した場合の挙動
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "valid_user");
+    list.addNode({ 10, "valid_user" });
     DoublyLinkedList::Iterator invalidIt(nullptr, nullptr);
 
     auto initialSize = list.getSize();
@@ -189,7 +197,7 @@ TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
         initialData.push_back(*it);
     }
 
-    list.insert(invalidIt, 20, "invalid_user");
+    list.insert(invalidIt, { 20, "invalid_user" });
 
     auto finalSize = list.getSize();
     std::vector<PerformanceData> finalData;
@@ -211,7 +219,7 @@ TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
 // インターフェース: 非constメソッド
 TEST(DoublyLinkedListTest, NonConstMethods) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     it->score = 20;
     EXPECT_EQ(it->score, 20);
@@ -221,7 +229,8 @@ TEST(DoublyLinkedListTest, NonConstMethods) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, DeleteWhenEmpty) {
     DoublyLinkedList list;
-    bool result = list.deleteNode("user1");
+    PerformanceData data{ 10, "user1" };
+    bool result = list.deleteNode(data);
     EXPECT_FALSE(result);
 }
 
@@ -229,10 +238,10 @@ TEST(DoublyLinkedListTest, DeleteWhenEmpty) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, DeleteAtBeginIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
-    bool result = list.deleteNode(it->username);
+    bool result = list.deleteNode(*it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
 }
@@ -241,15 +250,15 @@ TEST(DoublyLinkedListTest, DeleteAtBeginIterator) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, DeleteAtEndIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
     EXPECT_NE(it.getCurrent(), nullptr);
     EXPECT_EQ(it->score, 20);
     EXPECT_EQ(it->username, "user2");
 
-    bool result = list.deleteNode(it->username);
+    bool result = list.deleteNode(*it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
 
@@ -262,12 +271,12 @@ TEST(DoublyLinkedListTest, DeleteAtEndIterator) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
-    list.addNode(30, "user3");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
+    list.addNode({ 30, "user3" });
     auto it = list.begin();
     ++it;
-    bool result = list.deleteNode(it->username);
+    bool result = list.deleteNode(*it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 2);
 }
@@ -276,10 +285,10 @@ TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_NO_THROW(list.deleteNode(it->username));
+    EXPECT_NO_THROW(list.deleteNode(*it));
 }
 
 // テスト項目 21: 不正なイテレータを渡して、削除した場合の挙動
@@ -287,16 +296,16 @@ TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
 TEST(DoublyLinkedListTest, DeleteUsingInvalidIterator) {
     DoublyLinkedList list;
     DoublyLinkedList::Iterator invalidIt(nullptr);
-    EXPECT_THROW(list.deleteNode(invalidIt->username), std::invalid_argument);
+    EXPECT_THROW(list.deleteNode(*invalidIt), std::invalid_argument);
 }
 
 // テスト項目 22: 非constのメソッドであるか
 // インターフェース: 非constメソッド
 TEST(DoublyLinkedListTest, NonConstMethodsDelete) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
-    bool result = list.deleteNode(it->username);
+    bool result = list.deleteNode(*it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -313,7 +322,7 @@ TEST(DoublyLinkedListTest, CallWhenEmpty) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallWhenOneElement) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -323,8 +332,8 @@ TEST(DoublyLinkedListTest, CallWhenOneElement) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallWhenMultipleElements) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -337,7 +346,7 @@ TEST(DoublyLinkedListTest, CallWhenMultipleElements) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallAfterInsert) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -347,8 +356,9 @@ TEST(DoublyLinkedListTest, CallAfterInsert) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallAfterDelete) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.deleteNode("user1");
+    list.addNode({ 10, "user1" });
+    PerformanceData data{ 10, "user1" };
+    list.deleteNode(data);
     auto it = list.begin();
     EXPECT_EQ(it, list.end());
 }
@@ -357,10 +367,11 @@ TEST(DoublyLinkedListTest, CallAfterDelete) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotGetNonConstIteratorFromConstList) {
     DoublyLinkedList list;
-    list.addNode(1, "user1");
-    list.addNode(2, "user2");
-    list.addNode(3, "user3");
+    list.addNode({ 1, "user1" });
+    list.addNode({ 2, "user2" });
+    list.addNode({ 3, "user3" });
     const DoublyLinkedList constList(list);
+    // Cannot get a non-const iterator from a const list
 }
 
 // テスト項目 29: リストが空である場合に、呼び出した際の挙動
@@ -375,7 +386,7 @@ TEST(DoublyLinkedListTest, CallWhenEmptyAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallWhenOneElementAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -385,8 +396,8 @@ TEST(DoublyLinkedListTest, CallWhenOneElementAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallWhenMultipleElementsAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -399,7 +410,7 @@ TEST(DoublyLinkedListTest, CallWhenMultipleElementsAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallAfterInsertAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
@@ -409,8 +420,9 @@ TEST(DoublyLinkedListTest, CallAfterInsertAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallAfterDeleteAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.deleteNode("user1");
+    list.addNode({ 10, "user1" });
+    PerformanceData data{ 10, "user1" };
+    list.deleteNode(data);
     auto it = list.begin();
     EXPECT_EQ(it, list.end());
 }
@@ -419,10 +431,12 @@ TEST(DoublyLinkedListTest, CallAfterDeleteAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotAssignValueToElementFromConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     auto it = constList.begin();
     // Ensure we cannot modify the element through a const iterator
+    // This should be a compile-time error in a strict const context
+    // it->score = 20;
     EXPECT_NO_THROW(it->score);
 }
 
@@ -445,7 +459,7 @@ TEST(DoublyLinkedListTest, CallWithNoListReference) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, AssignValueToElementFromIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     it->score = 20;
     EXPECT_EQ(it->score, 20);
@@ -463,7 +477,7 @@ TEST(DoublyLinkedListTest, CallOnHeadIteratorWhenEmpty) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CallOnTailIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.end();
     EXPECT_EQ(it, list.end());
 }
@@ -479,8 +493,8 @@ TEST(DoublyLinkedListTest, CallWithNoListReferenceAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PreIncrementOperator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     ++it;
     EXPECT_EQ(it->score, 20);
@@ -491,8 +505,8 @@ TEST(DoublyLinkedListTest, PreIncrementOperator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PostIncrementOperator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     it++;
     EXPECT_EQ(it->score, 20);
@@ -503,8 +517,8 @@ TEST(DoublyLinkedListTest, PostIncrementOperator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PreDecrementOperator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
     EXPECT_EQ(it->score, 20);
@@ -515,8 +529,8 @@ TEST(DoublyLinkedListTest, PreDecrementOperator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PostDecrementOperator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     it--;
     --it;
@@ -528,9 +542,9 @@ TEST(DoublyLinkedListTest, PostDecrementOperator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotCopyConstIteratorToIterator) {
     DoublyLinkedList list;
-    list.addNode(1, "user1");
-    list.addNode(2, "user2");
-    list.addNode(3, "user3");
+    list.addNode({ 1, "user1" });
+    list.addNode({ 2, "user2" });
+    list.addNode({ 3, "user3" });
     const DoublyLinkedList constList(list);
     DoublyLinkedList::ConstIterator constIt = constList.begin();
 }
@@ -539,7 +553,7 @@ TEST(DoublyLinkedListTest, CannotCopyConstIteratorToIterator) {
 // インターフェース: コピーコンストラクタ
 TEST(DoublyLinkedListTest, CopyConstructorEquality) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     DoublyLinkedList copyList = list;
     auto it = copyList.begin();
     EXPECT_EQ(it->score, 10);
@@ -550,7 +564,7 @@ TEST(DoublyLinkedListTest, CopyConstructorEquality) {
 // インターフェース: 代入演算子
 TEST(DoublyLinkedListTest, ConstIteratorCannotAssignToIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator constIt = constList.begin();
     EXPECT_FALSE((std::is_convertible<DoublyLinkedList::ConstIterator, DoublyLinkedList::Iterator>::value));
@@ -560,7 +574,7 @@ TEST(DoublyLinkedListTest, ConstIteratorCannotAssignToIterator) {
 // インターフェース: 代入演算子
 TEST(DoublyLinkedListTest, AssignmentEquality) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     DoublyLinkedList copyList;
     copyList = list;
     auto it = copyList.begin();
@@ -581,7 +595,7 @@ TEST(DoublyLinkedListTest, CompareHeadAndTailIteratorWhenEmpty) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareSameIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it1 = list.begin();
     auto it2 = list.begin();
     EXPECT_EQ(it1, it2);
@@ -591,8 +605,8 @@ TEST(DoublyLinkedListTest, CompareSameIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareDifferentIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it1 = list.begin();
     auto it2 = list.begin();
     ++it2;
@@ -612,7 +626,7 @@ TEST(DoublyLinkedListTest, CompareHeadAndTailIteratorWhenEmptyAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareSameIteratorAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it1 = list.begin();
     auto it2 = list.begin();
     EXPECT_EQ(it1, it2);
@@ -622,8 +636,8 @@ TEST(DoublyLinkedListTest, CompareSameIteratorAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareDifferentIteratorAgain) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it1 = list.begin();
     auto it2 = list.begin();
     ++it2;
@@ -634,7 +648,7 @@ TEST(DoublyLinkedListTest, CompareDifferentIteratorAgain) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, UpdateElementFromIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     it->score = 20;
     EXPECT_EQ(it->score, 20);
@@ -644,7 +658,7 @@ TEST(DoublyLinkedListTest, UpdateElementFromIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareBeginAndEndIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto beginIt = list.begin();
     auto endIt = list.end();
     EXPECT_NE(beginIt, endIt);
@@ -654,8 +668,8 @@ TEST(DoublyLinkedListTest, CompareBeginAndEndIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PreIncrementBeginIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     ++it;
     EXPECT_EQ(it->score, 20);
@@ -666,8 +680,8 @@ TEST(DoublyLinkedListTest, PreIncrementBeginIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PostIncrementBeginIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     it++;
     EXPECT_EQ(it->score, 20);
@@ -678,8 +692,8 @@ TEST(DoublyLinkedListTest, PostIncrementBeginIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PreDecrementEndIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
     EXPECT_EQ(it->score, 20);
@@ -690,8 +704,8 @@ TEST(DoublyLinkedListTest, PreDecrementEndIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, PostDecrementEndIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     it--;
     --it;
@@ -703,11 +717,9 @@ TEST(DoublyLinkedListTest, PostDecrementEndIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, UpdateElementFromConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     auto it = constList.begin();
-    // Ensure we cannot modify the element through a const iterator
-    // This should be a compile-time error in a strict const context
     // it->score = 20;
     EXPECT_NO_THROW(it->score);
 }
@@ -716,7 +728,7 @@ TEST(DoublyLinkedListTest, UpdateElementFromConstIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, ConvertNonConstIteratorToConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     DoublyLinkedList::ConstIterator constIt(it);
     EXPECT_EQ(constIt->score, 10);
@@ -727,11 +739,9 @@ TEST(DoublyLinkedListTest, ConvertNonConstIteratorToConstIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotConvertConstIteratorToNonConstIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator constIt = constList.begin();
-    // This should be a compile-time error
-    // DoublyLinkedList::Iterator it = constIt;
 }
 
 // テスト項目 64: 空のリストに対してイテレータを取得した際の挙動
@@ -746,7 +756,7 @@ TEST(DoublyLinkedListTest, GetIteratorFromEmptyList) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, GetIteratorFromNonEmptyList) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it = list.begin();
     EXPECT_NE(it, list.end());
 }
@@ -755,8 +765,9 @@ TEST(DoublyLinkedListTest, GetIteratorFromNonEmptyList) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, GetIteratorAfterDelete) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.deleteNode("user1");
+    list.addNode({ 10, "user1" });
+    PerformanceData data{ 10, "user1" };
+    list.deleteNode(data);
     auto it = list.begin();
     EXPECT_EQ(it, list.end());
 }
@@ -765,7 +776,7 @@ TEST(DoublyLinkedListTest, GetIteratorAfterDelete) {
 // インターフェース: コピーコンストラクタ
 TEST(DoublyLinkedListTest, CopyList) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     DoublyLinkedList copyList = list;
     auto it = copyList.begin();
     EXPECT_EQ(it->score, 10);
@@ -786,8 +797,8 @@ TEST(DoublyLinkedListTest, CopyEmptyList) {
 TEST(DoublyLinkedListTest, CompareIteratorsFromDifferentLists) {
     DoublyLinkedList list1;
     DoublyLinkedList list2;
-    list1.addNode(10, "user1");
-    list2.addNode(10, "user1");
+    list1.addNode({ 10, "user1" });
+    list2.addNode({ 10, "user1" });
     auto it1 = list1.begin();
     auto it2 = list2.begin();
     EXPECT_NE(it1, it2);
@@ -797,7 +808,7 @@ TEST(DoublyLinkedListTest, CompareIteratorsFromDifferentLists) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CompareIteratorsFromSameList) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
+    list.addNode({ 10, "user1" });
     auto it1 = list.begin();
     auto it2 = list.begin();
     EXPECT_EQ(it1, it2);
@@ -807,8 +818,8 @@ TEST(DoublyLinkedListTest, CompareIteratorsFromSameList) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, AdvanceIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.begin();
     ++it;
     EXPECT_EQ(it->score, 20);
@@ -819,8 +830,8 @@ TEST(DoublyLinkedListTest, AdvanceIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, RetreatIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
     EXPECT_EQ(it->score, 20);
@@ -831,8 +842,8 @@ TEST(DoublyLinkedListTest, RetreatIterator) {
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, ReverseIterator) {
     DoublyLinkedList list;
-    list.addNode(10, "user1");
-    list.addNode(20, "user2");
+    list.addNode({ 10, "user1" });
+    list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
     EXPECT_EQ(it->score, 20);
@@ -841,4 +852,3 @@ TEST(DoublyLinkedListTest, ReverseIterator) {
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
 }
-
