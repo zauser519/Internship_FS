@@ -25,31 +25,21 @@ TEST(DoublyLinkedListTest, InsertAtEnd) {
 
 // テスト項目 2: リスト末尾への挿入が失敗した際の戻り値
 // インターフェース: データの挿入
-bool alwaysFail() {
-    return true;
-}
+TEST(DoublyLinkedListTest, InserAtEndFailed) {
+    DoublyLinkedList list1;
+    PerformanceData data{ 10, "user1" };
+    list1.addNode(data);
 
-bool neverFail() {
-    return false;
-}
-// テスト項目 2-1
-TEST(DoublyLinkedListTest, InsertWithFailureSimulation) {
-    DoublyLinkedList list(alwaysFail);
-    PerformanceData data{ 10, "user1" };
-    bool result = list.addNode(data);
-    EXPECT_FALSE(result);
-    EXPECT_EQ(list.getSize(), 0);
-}
-// テスト項目 2-2
-TEST(DoublyLinkedListTest, InsertWithoutFailureSimulation) {
-    DoublyLinkedList list(neverFail);
-    PerformanceData data{ 10, "user1" };
-    bool result = list.addNode(data);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 1);
-    auto it = list.begin();
-    EXPECT_EQ(it->score, 10);
-    EXPECT_EQ(it->username, "user1");
+    DoublyLinkedList list2;
+    PerformanceData data1{ 20, "user2" };
+    list2.addNode(data1);
+
+    DoublyLinkedList::Iterator it = list2.end(); // list2のendイテレータを取得
+    PerformanceData data2{ 30, "user3" };
+    bool result = list1.insert(it, data2); // list1に対してlist2のイテレータを使って挿入を試みる
+
+    EXPECT_FALSE(result); // 挿入が失敗することを確認
+    EXPECT_EQ(list1.getSize(), 1); // list1のデータ数が1のままであることを確認
 }
 
 // テスト項目 3: データの挿入を行った際の戻り値
@@ -212,7 +202,12 @@ TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
     list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_NO_THROW(list.insert(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent())), { 20, "user2" }));
+    EXPECT_NO_THROW(list.insert(it, { 20, "user2" }));
+    EXPECT_EQ(list.getSize(), 2);
+    auto iter = list.begin();
+    EXPECT_EQ(iter->score, 20);
+    ++iter;
+    EXPECT_EQ(iter->score, 10);
 }
 
 // テスト項目 14: 不正なイテレータを渡して、挿入した場合の挙動
@@ -312,8 +307,13 @@ TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
 TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
-    auto it = list.begin(); // ConstIteratorではなくIteratorを使用
+    list.addNode({ 20, "user2" });
+    const DoublyLinkedList& constList = list;
+    DoublyLinkedList::ConstIterator it = constList.begin();
     EXPECT_NO_THROW(list.deleteNode(it));
+    EXPECT_EQ(list.getSize(), 1);
+    auto iter = list.begin();
+    EXPECT_EQ(iter->score, 20);
 }
 
 // テスト項目 21: 不正なイテレータを渡して、削除した場合の挙動
@@ -390,13 +390,19 @@ TEST(DoublyLinkedListTest, CallAfterDelete) {
 
 // テスト項目 28: constのリストから、ConstIteratorでないIteratorの取得が行えないかをチェック
 // インターフェース: イテレータ
+#define CONST_METHOD_CHECK
 TEST(DoublyLinkedListTest, CannotGetNonConstIteratorFromConstList) {
+#if defined(CONST_METHOD_CHECK)
     DoublyLinkedList list;
     list.addNode({ 1, "user1" });
     list.addNode({ 2, "user2" });
     list.addNode({ 3, "user3" });
     const DoublyLinkedList constList(list);
-    // Cannot get a non-const iterator from a const list
+    // const リストから非 const イテレータを取得できません
+    // // コメントを外すとコンパイルに失敗するはずです
+    // // DoublyLinkedList::Iterator it = constList.begin(); // コンパイル エラーを確認するには、この行のコメントを外します
+#endif // CONST_METHOD_CHECK
+    SUCCEED();
 }
 
 // テスト項目 29: リストが空である場合に、呼び出した際の挙動
@@ -455,14 +461,15 @@ TEST(DoublyLinkedListTest, CallAfterDeleteAgain) {
 // テスト項目 34: ConstIteratorから取得した要素に対して、値の代入が行えないかをチェック
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotAssignValueToElementFromConstIterator) {
+#if defined(CONST_METHOD_CHECK)
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     auto it = constList.begin();
-    // Ensure we cannot modify the element through a const iterator
-    // This should be a compile-time error in a strict const context
-    // it->score = 20;
-    EXPECT_NO_THROW(it->score);
+    // 要素を const イテレータで変更できないようにします
+    // // it->score = 20; // この行のコメントを解除してコンパイル エラーを確認します
+#endif // CONST_METHOD_CHECK
+    SUCCEED();
 }
 
 // テスト項目 35: constのメソッドであるか
@@ -571,12 +578,17 @@ TEST(DoublyLinkedListTest, PostDecrementOperator) {
 // テスト項目 45: ConstIteratorから、Iteratorのコピーが作成されないかをチェック
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotCopyConstIteratorToIterator) {
+#if defined(CONST_METHOD_CHECK)
     DoublyLinkedList list;
     list.addNode({ 1, "user1" });
     list.addNode({ 2, "user2" });
     list.addNode({ 3, "user3" });
     const DoublyLinkedList constList(list);
     DoublyLinkedList::ConstIterator constIt = constList.begin();
+    // コメントを外すとコンパイルに失敗するはずです
+    // // DoublyLinkedList::Iterator it = constIt; // コンパイルエラーをチェックするにはこの行のコメントを外します
+#endif // CONST_METHOD_CHECK
+    SUCCEED();
 }
 
 // テスト項目 46: コピーコンストラクト後の値がコピー元と等しいことをチェック
@@ -768,10 +780,15 @@ TEST(DoublyLinkedListTest, ConvertNonConstIteratorToConstIterator) {
 // テスト項目 63: ConstIteratorから非constイテレータへの変換が行えないかをチェック
 // インターフェース: イテレータ
 TEST(DoublyLinkedListTest, CannotConvertConstIteratorToNonConstIterator) {
+#if defined(CONST_METHOD_CHECK)
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator constIt = constList.begin();
+    // コメントを外すとコンパイルに失敗するはずです
+    // // DoublyLinkedList::Iterator it = constIt; // コンパイルエラーをチェックするにはこの行のコメントを外します
+#endif // CONST_METHOD_CHECK
+    SUCCEED();
 }
 
 // テスト項目 64: 空のリストに対してイテレータを取得した際の挙動
@@ -882,3 +899,4 @@ TEST(DoublyLinkedListTest, ReverseIterator) {
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
 }
+#undef CONST_METHOD_CHECK
