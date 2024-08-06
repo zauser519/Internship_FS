@@ -142,6 +142,12 @@ public:
         return true;
     }
 
+    // ConstIteratorを受け取るdeleteNode
+    bool deleteNode(ConstIterator pos) {
+        Iterator it(const_cast<Node*>(pos.getCurrent()), tail);
+        return deleteNode(it);
+    }
+
     // リストをクリア
     void clear() noexcept {
         Node* current = head;
@@ -246,6 +252,11 @@ public:
 
     // 指定された位置にノードを挿入
     bool insert(Iterator pos, const PerformanceData& data) {
+        // イテレータがこのリストに属しているか確認
+        if (pos.tailRef != tail) {
+            return false; // 挿入失敗をシミュレート
+        }
+
         // 位置が終端の場合、ノードを末尾に追加
         if (pos == end()) {
             Node* newNode = new (std::nothrow) Node{ data, nullptr, nullptr };
@@ -267,26 +278,14 @@ public:
             return false;
         }
 
-        // イテレータがこのリストに属しているか確認
-        Node* current = head;
-        while (current != nullptr) {
-            if (current == pos.getCurrent()) {
-                break;
-            }
-            current = current->next;
-        }
-        if (current == nullptr) {
-            return false;
-        }
-
         Node* newNode = new (std::nothrow) Node{ data, nullptr, nullptr };
         if (!newNode) return false;
 
-        Node* prevNode = current->prev;
+        Node* prevNode = pos.getCurrent()->prev;
 
-        newNode->next = current;
+        newNode->next = pos.getCurrent();
         newNode->prev = prevNode;
-        current->prev = newNode;
+        pos.getCurrent()->prev = newNode;
 
         if (prevNode) {
             prevNode->next = newNode;
@@ -297,6 +296,12 @@ public:
 
         ++size; // サイズをインクリメント
         return true;
+    }
+
+    // ConstIteratorを受け取るinsert
+    bool insert(ConstIterator pos, const PerformanceData& data) {
+        Iterator it(const_cast<Node*>(pos.getCurrent()), tail);
+        return insert(it, data);
     }
 
     // コピーコンストラクタ: 他のリストをコピー
