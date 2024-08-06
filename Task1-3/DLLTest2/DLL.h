@@ -1,90 +1,155 @@
-﻿#ifndef DOUBLYLINKEDLIST_H
+#ifndef DOUBLYLINKEDLIST_H
 #define DOUBLYLINKEDLIST_H
 
 #include <iostream>
 #include <string>
+#include <functional>
 #include <stdexcept>
 
-// Node 構造体の定義
-template<typename T>
+// ノード構造体
+template <typename T>
 struct Node {
     T data;
     Node* prev;
     Node* next;
 };
 
-// DoublyLinkedList クラスの定義
-template<typename T>
+// 双方向リストクラス
+template <typename T>
 class DoublyLinkedList {
 private:
-    Node<T>* head; // リストの先頭
-    Node<T>* tail; // リストの末尾
+    Node<T>* head;
+    Node<T>* tail;
+    size_t size;
+    std::function<bool()> simulateFailure;
 
 public:
-    DoublyLinkedList() noexcept; // コンストラクタ
-    ~DoublyLinkedList() noexcept; // デストラクタ
+    // コンストラクタ: 空のリストを作成
+    DoublyLinkedList(std::function<bool()> failureSimulation = nullptr) noexcept;
 
-    bool addNode(const T& data) noexcept; // ノードを追加
-    void displayList() const noexcept; // リストを表示
-    size_t getSize() const noexcept; // リストのサイズを取得
-    bool deleteNode(const T& data); // ノードを削除
-    void clear() noexcept; // リストをクリア
+    // デストラクタ: リストを解放
+    ~DoublyLinkedList();
 
-    // イテレータクラスの定義
-    class Iterator {
-    private:
-        Node<T>* current; // 現在のノード
-        Node<T>* tailRef; // リストの末尾の参照
-        bool isEnd; // イテレータがリストの末尾かどうか
+    // 新しいノードをリストの末尾に追加
+    bool addNode(const T& data) noexcept;
 
-    public:
-        explicit Iterator(Node<T>* node = nullptr, Node<T>* tail = nullptr, bool end = false);
+    // リストのサイズを取得
+    size_t getSize() const noexcept;
 
-        T& operator*();
-        T* operator->();
-        Iterator& operator++();
-        Iterator operator++(int);
-        Iterator& operator--();
-        Iterator operator--(int);
-        bool operator==(const Iterator& other) const;
-        bool operator!=(const Iterator& other) const;
-        Node<T>* getCurrent() const;
-        bool isEndIterator() const { return isEnd; }
-    };
+    // イテレータクラスの宣言
+    class ConstIterator;
+    class Iterator;
 
+    // 指定されたイテレータのノードを削除
+    bool deleteNode(Iterator pos);
+    bool deleteNode(ConstIterator pos);
+
+    // リストをクリア
+    void clear() noexcept;
+
+    // リストの先頭を指すイテレータを取得
     Iterator begin();
-    Iterator end();
-
-    // ConstIterator クラスの定義
-    class ConstIterator {
-    private:
-        const Node<T>* current; // 現在のノード（定数）
-        const Node<T>* tailRef; // リストの末尾の参照（定数）
-        bool isEnd; // イテレータがリストの末尾かどうか
-
-    public:
-        explicit ConstIterator(const Node<T>* node = nullptr, const Node<T>* tail = nullptr, bool end = false);
-
-        const T& operator*() const;
-        const T* operator->() const;
-        ConstIterator& operator++();
-        ConstIterator operator++(int);
-        ConstIterator& operator--();
-        ConstIterator operator--(int);
-        bool operator==(const ConstIterator& other) const;
-        bool operator!=(const ConstIterator& other) const;
-        const Node<T>* getCurrent() const;
-        bool isEndIterator() const { return isEnd; }
-    };
-
     ConstIterator begin() const;
+
+    // リストの終端を指すイテレータを取得
+    Iterator end();
     ConstIterator end() const;
 
+    // 指定された位置にノードを挿入
     bool insert(Iterator pos, const T& data);
+    bool insert(ConstIterator pos, const T& data);
+
+    // コピーコンストラクタ: 他のリストをコピー
     DoublyLinkedList(const DoublyLinkedList& other);
+
+    // 代入演算子: 他のリストをコピー
     DoublyLinkedList& operator=(const DoublyLinkedList& other);
 };
 
+// イテレータクラスの定義
+template <typename T>
+class DoublyLinkedList<T>::Iterator {
+private:
+    Node<T>* current;
+    Node<T>* tailRef;
+
+public:
+    // コンストラクタ: イテレータの初期化
+    explicit Iterator(Node<T>* node = nullptr, Node<T>* tail = nullptr);
+
+    // デリファレンス演算子: 現在のデータを取得
+    T& operator*();
+
+    // ポインタ演算子: 現在のデータへのポインタを取得
+    T* operator->();
+
+    // 前置インクリメント演算子: 次のノードに進む
+    Iterator& operator++();
+
+    // 後置インクリメント演算子: 次のノードに進む（古い値を返す）
+    Iterator operator++(int);
+
+    // 前置デクリメント演算子: 前のノードに戻る
+    Iterator& operator--();
+
+    // 後置デクリメント演算子: 前のノードに戻る（古い値を返す）
+    Iterator operator--(int);
+
+    // 等価演算子: イテレータの比較
+    bool operator==(const Iterator& other) const;
+
+    // 非等価演算子: イテレータの比較
+    bool operator!=(const Iterator& other) const;
+
+    // 現在のノードを取得
+    Node<T>* getCurrent() const;
+
+    // DoublyLinkedListクラスにprivateメンバーへのアクセスを許可
+    friend class DoublyLinkedList<T>;
+};
+
+// ConstIteratorクラスの定義
+template <typename T>
+class DoublyLinkedList<T>::ConstIterator {
+private:
+    const Node<T>* current;
+
+public:
+    // コンストラクタ: 定数イテレータの初期化
+    explicit ConstIterator(const Node<T>* node = nullptr);
+
+    // Iteratorを受け取るコンストラクタ
+    ConstIterator(const Iterator& it);
+
+    // デリファレンス演算子: 現在のデータを取得（定数）
+    const T& operator*() const;
+
+    // ポインタ演算子: 現在のデータへのポインタを取得（定数）
+    const T* operator->() const;
+
+    // 前置インクリメント演算子: 次のノードに進む
+    ConstIterator& operator++();
+
+    // 後置インクリメント演算子: 次のノードに進む（古い値を返す）
+    ConstIterator operator++(int);
+
+    // 前置デクリメント演算子: 前のノードに戻る
+    ConstIterator& operator--();
+
+    // 後置デクリメント演算子: 前のノードに戻る（古い値を返す）
+    ConstIterator operator--(int);
+
+    // 等価演算子: イテレータの比較
+    bool operator==(const ConstIterator& other) const;
+
+    // 非等価演算子: イテレータの比較
+    bool operator!=(const ConstIterator& other) const;
+
+    // 現在のノードを取得
+    const Node<T>* getCurrent() const;
+};
+
+// インラインファイルをインクルード
 #include "DLL.inl"
 
 #endif // DOUBLYLINKEDLIST_H
