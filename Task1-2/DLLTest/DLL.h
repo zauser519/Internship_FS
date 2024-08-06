@@ -20,83 +20,25 @@ class DoublyLinkedList {
 private:
     Node* head;
     Node* tail;
-    bool simulateFailure; // 失敗をシミュレートする
+    size_t size; // 要素数を保持するメンバ変数
 
 public:
     // コンストラクタ: 空のリストを作成
-    DoublyLinkedList() noexcept : head(nullptr), tail(nullptr), simulateFailure(false) {} 
-
-    void setSimulateFailure(bool value) {
-        simulateFailure = value;
-    }
+    DoublyLinkedList() noexcept : head(nullptr), tail(nullptr), size(0) {}
 
     // 新しいノードをリストの末尾に追加
     bool addNode(const PerformanceData& data) noexcept {
-        if (simulateFailure) { 
-            return false;
-        }
         try {
-            Node* newNode = new Node{ data, nullptr, nullptr };
-            if (!head) {
-                head = tail = newNode;
-            }
-            else {
-                tail->next = newNode;
-                newNode->prev = tail;
-                tail = newNode;
-            }
-            return true;
+            return insert(end(), data); // insertメソッドを使用
         }
         catch (std::bad_alloc&) {
-            return false;// メモリ割り当てエラーで挿入失敗をシミュレート
+            return false; // メモリ割り当てエラーで挿入失敗をシミュレート
         }
     }
 
     // リストのサイズを取得
     size_t getSize() const noexcept {
-        size_t size = 0;
-        Node* current = head;
-        while (current) {
-            ++size;
-            current = current->next;
-        }
         return size;
-    }
-
-    // 指定されたユーザー名のノードを削除
-    bool deleteNode(const PerformanceData& data) {
-        Node* current = head;
-        while (current) {
-            if (current->data.username == data.username) {
-                if (current->prev) {
-                    current->prev->next = current->next;
-                }
-                if (current->next) {
-                    current->next->prev = current->prev;
-                }
-                if (current == head) {
-                    head = current->next;
-                }
-                if (current == tail) {
-                    tail = current->prev;
-                }
-                delete current;
-                return true;
-            }
-            current = current->next;
-        }
-        return false;
-    }
-
-    // リストをクリア
-    void clear() noexcept {
-        Node* current = head;
-        while (current) {
-            Node* next = current->next;
-            delete current;
-            current = next;
-        }
-        head = tail = nullptr;
     }
 
     class ConstIterator;
@@ -149,7 +91,7 @@ public:
             return *this;
         }
 
-        // 後置デクリメント演算子: 前のノードに戻る（古い値を返す)
+        // 後置デクリメント演算子: 前のノードに戻る（古い値を返す）
         Iterator operator--(int) {
             Iterator temp = *this;
             --(*this);
@@ -174,6 +116,42 @@ public:
         // ConstIteratorにprivateメンバーへのアクセスを許可
         friend class ConstIterator;
     };
+
+    // 指定されたイテレータのノードを削除
+    bool deleteNode(Iterator pos) {
+        if (!pos.getCurrent()) {
+            return false;
+        }
+
+        Node* current = pos.getCurrent();
+        if (current->prev) {
+            current->prev->next = current->next;
+        }
+        if (current->next) {
+            current->next->prev = current->prev;
+        }
+        if (current == head) {
+            head = current->next;
+        }
+        if (current == tail) {
+            tail = current->prev;
+        }
+        delete current;
+        --size; // サイズをデクリメント
+        return true;
+    }
+
+    // リストをクリア
+    void clear() noexcept {
+        Node* current = head;
+        while (current) {
+            Node* next = current->next;
+            delete current;
+            current = next;
+        }
+        head = tail = nullptr;
+        size = 0; // サイズをリセット
+    }
 
     class ConstIterator {
     private:
@@ -269,7 +247,17 @@ public:
     bool insert(Iterator pos, const PerformanceData& data) {
         // 位置が終端の場合、ノードを末尾に追加
         if (pos == end()) {
-            return addNode(data);
+            Node* newNode = new Node{ data, nullptr, nullptr };
+            if (!head) {
+                head = tail = newNode;
+            }
+            else {
+                tail->next = newNode;
+                newNode->prev = tail;
+                tail = newNode;
+            }
+            ++size; // サイズをインクリメント
+            return true;
         }
 
         // イテレータが無効またはこのリストに属していない場合、例外を投げる
@@ -304,11 +292,12 @@ public:
             head = newNode;
         }
 
+        ++size; // サイズをインクリメント
         return true;
     }
 
     // コピーコンストラクタ: 他のリストをコピー
-    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr) {
+    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), size(0) {
         for (Node* current = other.head; current != nullptr; current = current->next) {
             addNode(current->data);
         }
