@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 #include <stdexcept>
 
 struct PerformanceData {
@@ -20,20 +21,20 @@ class DoublyLinkedList {
 private:
     Node* head;
     Node* tail;
-    size_t size; // 要素数を保持するメンバ変数
+    size_t size;
+    std::function<bool()> simulateFailure;
 
 public:
     // コンストラクタ: 空のリストを作成
-    DoublyLinkedList() noexcept : head(nullptr), tail(nullptr), size(0) {}
+    DoublyLinkedList(std::function<bool()> failureSimulation = nullptr) noexcept
+        : head(nullptr), tail(nullptr), size(0), simulateFailure(failureSimulation) {}
 
     // 新しいノードをリストの末尾に追加
     bool addNode(const PerformanceData& data) noexcept {
-        try {
-            return insert(end(), data); // insertメソッドを使用
+        if (simulateFailure && simulateFailure()) {
+            return false; // 挿入失敗をシミュレート
         }
-        catch (std::bad_alloc&) {
-            return false; // メモリ割り当てエラーで挿入失敗をシミュレート
-        }
+        return insert(end(), data);
     }
 
     // リストのサイズを取得
@@ -113,8 +114,8 @@ public:
             return current;
         }
 
-        // ConstIteratorにprivateメンバーへのアクセスを許可
-        friend class ConstIterator;
+        // DoublyLinkedListクラスにprivateメンバーへのアクセスを許可
+        friend class DoublyLinkedList;
     };
 
     // 指定されたイテレータのノードを削除
@@ -247,7 +248,8 @@ public:
     bool insert(Iterator pos, const PerformanceData& data) {
         // 位置が終端の場合、ノードを末尾に追加
         if (pos == end()) {
-            Node* newNode = new Node{ data, nullptr, nullptr };
+            Node* newNode = new (std::nothrow) Node{ data, nullptr, nullptr };
+            if (!newNode) return false;
             if (!head) {
                 head = tail = newNode;
             }
@@ -256,29 +258,30 @@ public:
                 newNode->prev = tail;
                 tail = newNode;
             }
-            ++size; // サイズをインクリメント
+            ++size;
             return true;
         }
 
-        // イテレータが無効またはこのリストに属していない場合、例外を投げる
-        if (!pos.getCurrent()) {
-            throw std::invalid_argument("Invalid iterator position");
+        // イテレータが無効（null）またはこのリストに属していない場合、挿入失敗を返す
+        if (!pos.getCurrent() || pos.tailRef != tail) {
+            return false;
         }
 
         // イテレータがこのリストに属しているか確認
-        bool valid = false;
-        for (Node* node = head; node != nullptr; node = node->next) {
-            if (node == pos.getCurrent()) {
-                valid = true;
+        Node* current = head;
+        while (current != nullptr) {
+            if (current == pos.getCurrent()) {
                 break;
             }
+            current = current->next;
         }
-        if (!valid) {
-            throw std::invalid_argument("Iterator does not belong to this list");
+        if (current == nullptr) {
+            return false;
         }
 
-        Node* current = pos.getCurrent();
-        Node* newNode = new Node{ data, nullptr, nullptr };
+        Node* newNode = new (std::nothrow) Node{ data, nullptr, nullptr };
+        if (!newNode) return false;
+
         Node* prevNode = current->prev;
 
         newNode->next = current;
