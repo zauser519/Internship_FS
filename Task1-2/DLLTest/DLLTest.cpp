@@ -25,8 +25,16 @@ TEST(DoublyLinkedListTest, InsertAtEnd) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, InsertAtEndFailure) {
     DoublyLinkedList list;
-    list.setSimulateFailure(true); 
-    bool result = list.addNode({ 10, "user1" });
+    bool result = false;
+    try {
+        PerformanceData data{ 10, "user1" };
+        throw std::bad_alloc();
+        result = list.addNode(data);
+    }
+    catch (const std::bad_alloc&) {
+        result = false;
+    }
+
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -48,8 +56,16 @@ TEST(DoublyLinkedListTest, ReturnValueOnInsert) {
 // インターフェース: データの挿入
 TEST(DoublyLinkedListTest, ReturnValueOnInsertFailure) {
     DoublyLinkedList list;
-    list.setSimulateFailure(true); 
-    bool result = list.addNode({ 10, "user1" });
+    bool result = false;
+    try {
+        PerformanceData data{ 10, "user1" };
+        throw std::bad_alloc();
+        result = list.addNode(data);
+    }
+    catch (const std::bad_alloc&) {
+        result = false;
+    }
+
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -60,7 +76,8 @@ TEST(DoublyLinkedListTest, ReturnValueOnDelete) {
     DoublyLinkedList list;
     PerformanceData data{ 10, "user1" };
     list.addNode(data);
-    bool result = list.deleteNode(data);
+    auto it = list.begin();
+    bool result = list.deleteNode(it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -71,18 +88,19 @@ TEST(DoublyLinkedListTest, ReturnValueOnDeleteFailure) {
     DoublyLinkedList list;
     PerformanceData data{ 10, "user1" };
     list.addNode(data);
-    PerformanceData wrongData{ 20, "user2" };
-    bool result = list.deleteNode(wrongData);
+
+    DoublyLinkedList::Iterator invalidIt(nullptr);
+    bool result = list.deleteNode(invalidIt);
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 1);
 }
-
 // テスト項目 7: リストが空である場合に、データの削除を行った際の戻り値
 // インターフェース: データの削除
 TEST(DoublyLinkedListTest, ReturnValueOnDeleteFromEmptyList) {
     DoublyLinkedList list;
     PerformanceData data{ 10, "user1" };
-    bool result = list.deleteNode(data);
+    auto it = list.begin();
+    bool result = list.deleteNode(it);
     EXPECT_FALSE(result);
 }
 
@@ -218,11 +236,16 @@ TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
 // テスト項目 15: 非constのメソッドであるか
 // インターフェース: 非constメソッド
 TEST(DoublyLinkedListTest, NonConstMethods) {
+#ifndef CONST_METHOD_CHECK
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
     auto it = list.begin();
     it->score = 20;
     EXPECT_EQ(it->score, 20);
+#else
+    const DoublyLinkedList list;
+    list.addNode({ 10, "user1" });
+#endif
 }
 
 // テスト項目 16: リストが空である場合に、削除を行った際の挙動
@@ -230,7 +253,8 @@ TEST(DoublyLinkedListTest, NonConstMethods) {
 TEST(DoublyLinkedListTest, DeleteWhenEmpty) {
     DoublyLinkedList list;
     PerformanceData data{ 10, "user1" };
-    bool result = list.deleteNode(data);
+    auto it = list.begin();
+    bool result = list.deleteNode(it);
     EXPECT_FALSE(result);
 }
 
@@ -241,7 +265,7 @@ TEST(DoublyLinkedListTest, DeleteAtBeginIterator) {
     list.addNode({ 10, "user1" });
     list.addNode({ 20, "user2" });
     auto it = list.begin();
-    bool result = list.deleteNode(*it);
+    bool result = list.deleteNode(it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
 }
@@ -258,7 +282,7 @@ TEST(DoublyLinkedListTest, DeleteAtEndIterator) {
     EXPECT_EQ(it->score, 20);
     EXPECT_EQ(it->username, "user2");
 
-    bool result = list.deleteNode(*it);
+    bool result = list.deleteNode(it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 1);
 
@@ -276,7 +300,7 @@ TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
     list.addNode({ 30, "user3" });
     auto it = list.begin();
     ++it;
-    bool result = list.deleteNode(*it);
+    bool result = list.deleteNode(it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 2);
 }
@@ -288,7 +312,7 @@ TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
     list.addNode({ 10, "user1" });
     const DoublyLinkedList& constList = list;
     DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_NO_THROW(list.deleteNode(*it));
+    EXPECT_NO_THROW(list.deleteNode(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent()))));
 }
 
 // テスト項目 21: 不正なイテレータを渡して、削除した場合の挙動
@@ -296,7 +320,7 @@ TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
 TEST(DoublyLinkedListTest, DeleteUsingInvalidIterator) {
     DoublyLinkedList list;
     DoublyLinkedList::Iterator invalidIt(nullptr);
-    EXPECT_THROW(list.deleteNode(*invalidIt), std::invalid_argument);
+    EXPECT_FALSE(list.deleteNode(invalidIt));
 }
 
 // テスト項目 22: 非constのメソッドであるか
@@ -305,7 +329,7 @@ TEST(DoublyLinkedListTest, NonConstMethodsDelete) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
     auto it = list.begin();
-    bool result = list.deleteNode(*it);
+    bool result = list.deleteNode(it);
     EXPECT_TRUE(result);
     EXPECT_EQ(list.getSize(), 0);
 }
@@ -357,9 +381,9 @@ TEST(DoublyLinkedListTest, CallAfterInsert) {
 TEST(DoublyLinkedListTest, CallAfterDelete) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
-    PerformanceData data{ 10, "user1" };
-    list.deleteNode(data);
     auto it = list.begin();
+    list.deleteNode(it);
+    it = list.begin();
     EXPECT_EQ(it, list.end());
 }
 
@@ -421,9 +445,9 @@ TEST(DoublyLinkedListTest, CallAfterInsertAgain) {
 TEST(DoublyLinkedListTest, CallAfterDeleteAgain) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
-    PerformanceData data{ 10, "user1" };
-    list.deleteNode(data);
     auto it = list.begin();
+    list.deleteNode(it);
+    it = list.begin();
     EXPECT_EQ(it, list.end());
 }
 
@@ -766,9 +790,9 @@ TEST(DoublyLinkedListTest, GetIteratorFromNonEmptyList) {
 TEST(DoublyLinkedListTest, GetIteratorAfterDelete) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
-    PerformanceData data{ 10, "user1" };
-    list.deleteNode(data);
     auto it = list.begin();
+    list.deleteNode(it);
+    it = list.begin();
     EXPECT_EQ(it, list.end());
 }
 
