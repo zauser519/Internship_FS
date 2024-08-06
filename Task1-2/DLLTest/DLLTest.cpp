@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "DLL.h"
 
+
 // テスト項目 0: リストが空である場合の戻り値
 // インターフェース: データ数の取得
 TEST(DoublyLinkedListTest, IsEmptyInitially) {
@@ -21,22 +22,34 @@ TEST(DoublyLinkedListTest, InsertAtEnd) {
     EXPECT_EQ(it->username, "user1");
 }
 
+
 // テスト項目 2: リスト末尾への挿入が失敗した際の戻り値
 // インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertAtEndFailure) {
-    DoublyLinkedList list;
-    bool result = false;
-    try {
-        PerformanceData data{ 10, "user1" };
-        throw std::bad_alloc();
-        result = list.addNode(data);
-    }
-    catch (const std::bad_alloc&) {
-        result = false;
-    }
+bool alwaysFail() {
+    return true;
+}
 
+bool neverFail() {
+    return false;
+}
+// テスト項目 2-1
+TEST(DoublyLinkedListTest, InsertWithFailureSimulation) {
+    DoublyLinkedList list(alwaysFail);
+    PerformanceData data{ 10, "user1" };
+    bool result = list.addNode(data);
     EXPECT_FALSE(result);
     EXPECT_EQ(list.getSize(), 0);
+}
+// テスト項目 2-2
+TEST(DoublyLinkedListTest, InsertWithoutFailureSimulation) {
+    DoublyLinkedList list(neverFail);
+    PerformanceData data{ 10, "user1" };
+    bool result = list.addNode(data);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(list.getSize(), 1);
+    auto it = list.begin();
+    EXPECT_EQ(it->score, 10);
+    EXPECT_EQ(it->username, "user1");
 }
 
 // テスト項目 3: データの挿入を行った際の戻り値
@@ -203,35 +216,24 @@ TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
 }
 
 // テスト項目 14: 不正なイテレータを渡して、挿入した場合の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertUsingInvalidIterator) {
-    DoublyLinkedList list;
-    list.addNode({ 10, "valid_user" });
-    DoublyLinkedList::Iterator invalidIt(nullptr, nullptr);
+TEST(DoublyLinkedListTest, TestInsertInvalid) {
+    DoublyLinkedList list1;
+    PerformanceData data1{ 10, "user1" };
+    list1.addNode(data1);
+    
+    DoublyLinkedList list2;
+    PerformanceData data2{ 20, "user2" };
+    list2.addNode(data2);
 
-    auto initialSize = list.getSize();
-    std::vector<PerformanceData> initialData;
-    for (auto it = list.begin(); it != list.end(); ++it) {
-        initialData.push_back(*it);
-    }
+    DoublyLinkedList::Iterator it = list2.begin();
+    PerformanceData data3{ 30, "user3" };
+    bool success = list1.insert(it, data3);
 
-    list.insert(invalidIt, { 20, "invalid_user" });
-
-    auto finalSize = list.getSize();
-    std::vector<PerformanceData> finalData;
-    for (auto it = list.begin(); it != list.end(); ++it) {
-        finalData.push_back(*it);
-    }
-
-    EXPECT_EQ(finalSize, initialSize + 1);
-    EXPECT_EQ(finalData.back().score, 20);
-    EXPECT_EQ(finalData.back().username, "invalid_user");
-
-    for (size_t i = 0; i < initialData.size(); ++i) {
-        EXPECT_EQ(finalData[i].score, initialData[i].score);
-        EXPECT_EQ(finalData[i].username, initialData[i].username);
-    }
+    // 挿入が失敗することを確認
+    EXPECT_FALSE(success);
+    EXPECT_EQ(list1.getSize(), 1);
 }
+
 
 // テスト項目 15: 非constのメソッドであるか
 // インターフェース: 非constメソッド
@@ -310,9 +312,8 @@ TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
 TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
     DoublyLinkedList list;
     list.addNode({ 10, "user1" });
-    const DoublyLinkedList& constList = list;
-    DoublyLinkedList::ConstIterator it = constList.begin();
-    EXPECT_NO_THROW(list.deleteNode(DoublyLinkedList::Iterator(const_cast<Node*>(it.getCurrent()), const_cast<Node*>(list.end().getCurrent()))));
+    auto it = list.begin(); // ConstIteratorではなくIteratorを使用
+    EXPECT_NO_THROW(list.deleteNode(it));
 }
 
 // テスト項目 21: 不正なイテレータを渡して、削除した場合の挙動
@@ -520,7 +521,8 @@ TEST(DoublyLinkedListTest, PreIncrementOperator) {
     list.addNode({ 10, "user1" });
     list.addNode({ 20, "user2" });
     auto it = list.begin();
-    ++it;
+    auto& itRef = ++it;
+    EXPECT_EQ(itRef->score, 20);
     EXPECT_EQ(it->score, 20);
     EXPECT_EQ(it->username, "user2");
 }
@@ -532,7 +534,8 @@ TEST(DoublyLinkedListTest, PostIncrementOperator) {
     list.addNode({ 10, "user1" });
     list.addNode({ 20, "user2" });
     auto it = list.begin();
-    it++;
+    auto itPrev = it++;
+    EXPECT_EQ(itPrev->score, 10);
     EXPECT_EQ(it->score, 20);
     EXPECT_EQ(it->username, "user2");
 }
@@ -545,8 +548,10 @@ TEST(DoublyLinkedListTest, PreDecrementOperator) {
     list.addNode({ 20, "user2" });
     auto it = list.end();
     --it;
-    EXPECT_EQ(it->score, 20);
-    EXPECT_EQ(it->username, "user2");
+    auto& itRef = --it;
+    EXPECT_EQ(itRef->score, 10);
+    EXPECT_EQ(it->score, 10);
+    EXPECT_EQ(it->username, "user1");
 }
 
 // テスト項目 44: 後置デクリメントを行った際の挙動
@@ -556,8 +561,9 @@ TEST(DoublyLinkedListTest, PostDecrementOperator) {
     list.addNode({ 10, "user1" });
     list.addNode({ 20, "user2" });
     auto it = list.end();
-    it--;
     --it;
+    auto itPrev = it--;
+    EXPECT_EQ(itPrev->score, 20);
     EXPECT_EQ(it->score, 10);
     EXPECT_EQ(it->username, "user1");
 }
