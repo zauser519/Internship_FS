@@ -1,8 +1,9 @@
-﻿#ifndef SORT_H
+#ifndef SORT_H
 #define SORT_H
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 // スコアデータを保持する構造体
 struct Score {
@@ -11,19 +12,36 @@ struct Score {
     Score(int s = 0, std::string u = "") : score(s), username(u) {} // メンバーを初期化
 };
 
-// 2つのScoreオブジェクトを交換する関数
-void swap(Score& a, Score& b) noexcept;
+// ノードの構造体
+struct Node {
+    Score data;
+    Node* prev;
+    Node* next;
+    Node(Score s) : data(s), prev(nullptr), next(nullptr) {}
+};
 
-// クイックソートのためのパーティション関数
-int partition(std::vector<Score>& scores, int low, int high, bool byScore, bool ascending);
+// 双方向リストのクラス
+class DoubleLinkedList {
+public:
+    DoubleLinkedList();
+    ~DoubleLinkedList();
 
-// クイックソート関数
-void quicksort(std::vector<Score>& scores, int low, int high, bool byScore, bool ascending);
+    void addScore(int score, const std::string& username);
+    void printScores() const;
+    void clear();
+    void fromVector(const std::vector<Score>& scores);
+    std::vector<Score> toVector() const;
+    Node* partition(Node* low, Node* high, bool byScore, bool ascending);
+    void quicksort(Node* low, Node* high, bool byScore, bool ascending);
 
-// ファイルからスコアを読み込む関数
-std::vector<Score> loadScores(const std::string& filename);
+    Node* getHead() const;
+    Node* getTail() const;
 
-// スコアを出力する関数
-void printScores(const std::vector<Score>& scores);
+private:
+    Node* head;
+    Node* tail;
+};
+
+#include "Sort.inl"
 
 #endif // SORT_H
