@@ -70,6 +70,9 @@ TEST(QuickSortTest, NullptrKey) {
     ASSERT_EQ(scores.toVector()[0].score, 10);
 }
 
+// マクロを使ってテスト項目 7 と 8 を切り替える
+
+#ifdef RUN_INVALID_KEY_TYPE_TEST
 // テスト項目 7: 型などが不適切なキー指定が引数で渡された時の挙動 (コンパイルエラー)
 TEST(QuickSortTest, InvalidKeyType) {
     // このテストはコンパイルエラーをチェックするためのものです
@@ -77,10 +80,13 @@ TEST(QuickSortTest, InvalidKeyType) {
     // scores.quicksort(scores.getHead(), scores.getTail(), true, "invalid_key");
     ASSERT_TRUE(true);
 }
+#endif
 
+#ifdef RUN_NON_CONST_METHOD_TEST
 // テスト項目 8: 非constのメソッドであるか (コンパイルエラー)
 TEST(QuickSortTest, NonConstMethod) {
     const DoubleLinkedList scores;
     // scores.quicksort(scores.getHead(), scores.getTail(), true, true); // これはコンパイルエラーになるはず
     ASSERT_TRUE(true);
 }
+#endif
