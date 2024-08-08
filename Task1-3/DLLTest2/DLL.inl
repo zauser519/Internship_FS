@@ -1,112 +1,235 @@
-#ifndef DLL_INL
-#define DLL_INL
+#include "DLL.h"
+#include <cassert>
 
-// コンストラクタの実装
-template <typename T>
-DoublyLinkedList<T>::DoublyLinkedList(std::function<bool()> failureSimulation) noexcept
-    : head(nullptr), tail(nullptr), size(0), simulateFailure(failureSimulation) {}
+// ノードのコンストラクタ
+// 引数: const T& rd - ノードのデータ
+// 期待結果: ノードが初期化される
+template<typename T>
+DoublyLinkedList<T>::Node::Node(const T& rd) : data(rd), prev(nullptr), next(nullptr) {}
 
-// デストラクタの実装
-template <typename T>
-DoublyLinkedList<T>::~DoublyLinkedList() {
-    clear();
-}
+// ConstIterator のコンストラクタ
+// 引数: Node* node - 現在のノード
+//       const DoublyLinkedList* list - 関連するリスト
+// 期待結果: ConstIterator が初期化される
+template<typename T>
+DoublyLinkedList<T>::ConstIterator::ConstIterator(Node* node, const DoublyLinkedList* list) : current(node), list(list) {}
 
-// 新しいノードをリストの末尾に追加
-template <typename T>
-bool DoublyLinkedList<T>::addNode(const T& data) noexcept {
-    if (simulateFailure && simulateFailure()) {
-        return false; // 挿入失敗をシミュレート
+// ConstIterator のコピーコンストラクタ
+// 引数: const ConstIterator& other - コピー元のイテレータ
+// 期待結果: ConstIterator がコピーされる
+template<typename T>
+DoublyLinkedList<T>::ConstIterator::ConstIterator(const ConstIterator& other) : current(other.current), list(other.list) {}
+
+// 前置デクリメント演算子
+// 期待結果: イテレータが前のノードに移動する
+// 戻り値: 自身の参照
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator& DoublyLinkedList<T>::ConstIterator::operator--() {
+    assert(list != nullptr);
+    assert(list->tail != nullptr);
+
+    if (current == nullptr) {
+        current = list->tail;
     }
-    return insert(end(), data);
+    else {
+        current = current->prev;
+    }
+    return *this;
 }
 
-// リストのサイズを取得
-template <typename T>
-size_t DoublyLinkedList<T>::getSize() const noexcept {
+// 後置デクリメント演算子
+// 期待結果: イテレータが前のノードに移動する
+// 戻り値: 移動前のイテレータのコピー
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::ConstIterator::operator--(int) {
+    assert(list != nullptr);
+    assert(list->tail != nullptr);
+
+    ConstIterator temp = *this;
+    --(*this);
+    return temp;
+}
+
+// 前置インクリメント演算子
+// 期待結果: イテレータが次のノードに移動する
+// 戻り値: 自身の参照
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator& DoublyLinkedList<T>::ConstIterator::operator++() {
+    assert(list != nullptr);
+    assert(list->tail != nullptr);
+
+    if (current == nullptr) {
+        current = list->head;
+    }
+    else {
+        current = current->next;
+    }
+    return *this;
+}
+
+// 後置インクリメント演算子
+// 期待結果: イテレータが次のノードに移動する
+// 戻り値: 移動前のイテレータのコピー
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::ConstIterator::operator++(int) {
+    assert(list != nullptr);
+    assert(list->tail != nullptr);
+
+    ConstIterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+// デリファレンス演算子
+// 期待結果: 現在のノードのデータを返す
+// 戻り値: 現在のノードのデータの参照
+template<typename T>
+const T& DoublyLinkedList<T>::ConstIterator::operator*() const {
+    assert(current != nullptr);
+    return current->data;
+}
+
+// アロー演算子
+// 期待結果: 現在のノードのデータへのポインタを返す
+// 戻り値: 現在のノードのデータへのポインタ
+template<typename T>
+const T* DoublyLinkedList<T>::ConstIterator::operator->() const {
+    assert(current != nullptr);
+    return &(current->data);
+}
+
+// 代入演算子
+// 期待結果: イテレータの状態をコピーする
+// 引数: const ConstIterator& other - コピー元のイテレータ
+template<typename T>
+void DoublyLinkedList<T>::ConstIterator::operator=(const ConstIterator& other) {
+    current = other.current;
+}
+
+// 等価比較演算子
+// 期待結果: イテレータが指しているノードが同じ場合に true を返す
+// 引数: const ConstIterator& other - 比較対象のイテレータ
+// 戻り値: 等しい場合は true, それ以外は false
+template<typename T>
+bool DoublyLinkedList<T>::ConstIterator::operator==(const ConstIterator& other) const {
+    return current == other.current;
+}
+
+// 非等価比較演算子
+// 期待結果: イテレータが指しているノードが異なる場合に true を返す
+// 引数: const ConstIterator& other - 比較対象のイテレータ
+// 戻り値: 異なる場合は true, それ以外は false
+template<typename T>
+bool DoublyLinkedList<T>::ConstIterator::operator!=(const ConstIterator& other) const {
+    return current != other.current;
+}
+
+// Iterator のコンストラクタ
+// 引数: Node* node - 現在のノード
+//       const DoublyLinkedList* list - 関連するリスト
+// 期待結果: Iterator が初期化される
+template<typename T>
+DoublyLinkedList<T>::Iterator::Iterator(Node* node, const DoublyLinkedList* list) : ConstIterator(node, list) {}
+
+// 前置デクリメント演算子
+// 期待結果: イテレータが前のノードに移動する
+// 戻り値: 自身の参照
+template<typename T>
+typename DoublyLinkedList<T>::Iterator& DoublyLinkedList<T>::Iterator::operator--() {
+    assert(this->list != nullptr);
+    assert(this->list->tail != nullptr);
+    assert(this->current != this->list->head);
+
+    if (this->current == nullptr) {
+        this->current = this->list->tail;
+    }
+    else {
+        this->current = this->current->prev;
+    }
+    return *this;
+}
+
+// 後置デクリメント演算子
+// 期待結果: イテレータが前のノードに移動する
+// 戻り値: 移動前のイテレータのコピー
+template<typename T>
+typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::Iterator::operator--(int) {
+    assert(this->list != nullptr);
+    assert(this->list->tail != nullptr);
+    assert(this->current != this->list->head);
+
+    Iterator temp = *this;
+    --(*this);
+    return temp;
+}
+
+// 前置インクリメント演算子
+// 期待結果: イテレータが次のノードに移動する
+// 戻り値: 自身の参照
+template<typename T>
+typename DoublyLinkedList<T>::Iterator& DoublyLinkedList<T>::Iterator::operator++() {
+    assert(this->current != nullptr);
+    this->current = this->current->next;
+    return *this;
+}
+
+// 後置インクリメント演算子
+// 期待結果: イテレータが次のノードに移動する
+// 戻り値: 移動前のイテレータのコピー
+template<typename T>
+typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::Iterator::operator++(int) {
+    assert(this->current != nullptr);
+
+    Iterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+// デリファレンス演算子
+// 期待結果: 現在のノードのデータを返す
+// 戻り値: 現在のノードのデータの参照
+template<typename T>
+T& DoublyLinkedList<T>::Iterator::operator*() {
+    assert(this->current != nullptr);
+    return this->current->data;
+}
+
+// アロー演算子
+// 期待結果: 現在のノードのデータへのポインタを返す
+// 戻り値: 現在のノードのデータへのポインタ
+template<typename T>
+T* DoublyLinkedList<T>::Iterator::operator->() {
+    assert(this->current != nullptr);
+    return &(this->current->data);
+}
+
+// DoublyLinkedList のコンストラクタ
+// 期待結果: 空のリストが初期化される
+template<typename T>
+DoublyLinkedList<T>::DoublyLinkedList() : head(nullptr), tail(nullptr), size(0) {}
+
+// リストのサイズを取得する関数
+// 期待結果: リストのサイズを返す
+// 戻り値: リストのサイズ
+template<typename T>
+int DoublyLinkedList<T>::GetSize() const {
     return size;
 }
 
-// 指定されたイテレータのノードを削除
-template <typename T>
-bool DoublyLinkedList<T>::deleteNode(Iterator pos) {
-    if (!pos.getCurrent()) {
-        return false;
-    }
+// 指定された位置にノードを挿入する関数
+// 引数: const Iterator& iter - 挿入位置のイテレータ
+//       const T& data - 挿入するデータ
+// 期待結果: 指定された位置にノードが挿入される
+// 戻り値: 挿入に成功した場合は true, それ以外は false
+template<typename T>
+bool DoublyLinkedList<T>::Insert(const Iterator& iter, const T& data) {
+    Node* newNode = new Node(data);
+    Node* current = iter.current;
 
-    Node<T>* current = pos.getCurrent();
-    if (current->prev) {
-        current->prev->next = current->next;
-    }
-    if (current->next) {
-        current->next->prev = current->prev;
-    }
-    if (current == head) {
-        head = current->next;
-    }
-    if (current == tail) {
-        tail = current->prev;
-    }
-    delete current;
-    --size;
-    return true;
-}
+    if (iter.list != this) return false;
 
-// ConstIteratorを受け取るdeleteNode
-template <typename T>
-bool DoublyLinkedList<T>::deleteNode(ConstIterator pos) {
-    Iterator it(const_cast<Node<T>*>(pos.getCurrent()), tail);
-    return deleteNode(it);
-}
-
-// リストをクリア
-template <typename T>
-void DoublyLinkedList<T>::clear() noexcept {
-    Node<T>* current = head;
-    while (current) {
-        Node<T>* next = current->next;
-        delete current;
-        current = next;
-    }
-    head = tail = nullptr;
-    size = 0;
-}
-
-// リストの先頭を指すイテレータを取得
-template <typename T>
-typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::begin() {
-    return Iterator(head, tail);
-}
-
-// リストの終端を指すイテレータを取得
-template <typename T>
-typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::end() {
-    return Iterator(nullptr, tail);
-}
-
-// リストの先頭を指す定数イテレータを取得
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::begin() const {
-    return ConstIterator(head);
-}
-
-// リストの終端を指す定数イテレータを取得
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::end() const {
-    return ConstIterator(nullptr);
-}
-
-// 指定された位置にノードを挿入
-template <typename T>
-bool DoublyLinkedList<T>::insert(Iterator pos, const T& data) {
-    if (pos.tailRef != tail) {
-        return false; // 挿入失敗をシミュレート
-    }
-
-    if (pos == end()) {
-        Node<T>* newNode = new (std::nothrow) Node<T>{ data, nullptr, nullptr };
-        if (!newNode) return false;
-        if (!head) {
+    if (current == nullptr) {
+        if (tail == nullptr) {
             head = tail = newNode;
         }
         else {
@@ -114,189 +237,89 @@ bool DoublyLinkedList<T>::insert(Iterator pos, const T& data) {
             newNode->prev = tail;
             tail = newNode;
         }
-        ++size;
-        return true;
-    }
-
-    if (!pos.getCurrent() || pos.tailRef != tail) {
-        return false;
-    }
-
-    Node<T>* newNode = new (std::nothrow) Node<T>{ data, nullptr, nullptr };
-    if (!newNode) return false;
-
-    Node<T>* prevNode = pos.getCurrent()->prev;
-
-    newNode->next = pos.getCurrent();
-    newNode->prev = prevNode;
-    pos.getCurrent()->prev = newNode;
-
-    if (prevNode) {
-        prevNode->next = newNode;
     }
     else {
-        head = newNode;
+        newNode->next = current;
+        newNode->prev = current->prev;
+        if (current->prev) {
+            current->prev->next = newNode;
+        }
+        else {
+            head = newNode;
+        }
+        current->prev = newNode;
     }
 
-    ++size;
+    size++;
     return true;
 }
 
-// ConstIteratorを受け取るinsert
-template <typename T>
-bool DoublyLinkedList<T>::insert(ConstIterator pos, const T& data) {
-    Iterator it(const_cast<Node<T>*>(pos.getCurrent()), tail);
-    return insert(it, data);
-}
+// 指定された位置のノードを削除する関数
+// 引数: const Iterator& iter - 削除位置のイテレータ
+// 期待結果: 指定された位置のノードが削除される
+// 戻り値: 削除に成功した場合は true, それ以外は false
+template<typename T>
+bool DoublyLinkedList<T>::Delete(const Iterator& iter) {
+    Node* current = iter.current;
 
-// コピーコンストラクタ: 他のリストをコピー
-template <typename T>
-DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), size(0) {
-    for (Node<T>* current = other.head; current != nullptr; current = current->next) {
-        addNode(current->data);
-    }
-}
+    if (current == nullptr || iter.list != this) return false;
 
-// 代入演算子: 他のリストをコピー
-template <typename T>
-DoublyLinkedList<T>& DoublyLinkedList<T>::operator=(const DoublyLinkedList& other) {
-    if (this != &other) {
-        clear();
-        for (Node<T>* current = other.head; current != nullptr; current = current->next) {
-            addNode(current->data);
-        }
-    }
-    return *this;
-}
-
-// Iteratorクラスのメソッドの定義
-template <typename T>
-DoublyLinkedList<T>::Iterator::Iterator(Node<T>* node, Node<T>* tail) : current(node), tailRef(tail) {}
-
-template <typename T>
-T& DoublyLinkedList<T>::Iterator::operator*() {
-    if (!current) throw std::invalid_argument("Dereferencing null iterator");
-    return current->data;
-}
-
-template <typename T>
-T* DoublyLinkedList<T>::Iterator::operator->() {
-    if (!current) throw std::invalid_argument("Dereferencing null iterator");
-    return &(current->data);
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::Iterator& DoublyLinkedList<T>::Iterator::operator++() {
-    if (current) current = current->next;
-    return *this;
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::Iterator::operator++(int) {
-    Iterator temp = *this;
-    ++(*this);
-    return temp;
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::Iterator& DoublyLinkedList<T>::Iterator::operator--() {
-    if (!current) {
-        current = tailRef;
-    }
-    else if (current->prev) {
-        current = current->prev;
+    if (current->prev) {
+        current->prev->next = current->next;
     }
     else {
-        throw std::runtime_error("Decrementing null iterator");
+        head = current->next;
     }
-    return *this;
-}
 
-template <typename T>
-typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::Iterator::operator--(int) {
-    Iterator temp = *this;
-    --(*this);
-    return temp;
-}
-
-template <typename T>
-bool DoublyLinkedList<T>::Iterator::operator==(const Iterator& other) const {
-    return current == other.current;
-}
-
-template <typename T>
-bool DoublyLinkedList<T>::Iterator::operator!=(const Iterator& other) const {
-    return current != other.current;
-}
-
-template <typename T>
-Node<T>* DoublyLinkedList<T>::Iterator::getCurrent() const {
-    return current;
-}
-
-// ConstIteratorクラスのメソッドの定義
-template <typename T>
-DoublyLinkedList<T>::ConstIterator::ConstIterator(const Node<T>* node) : current(node) {}
-
-template <typename T>
-DoublyLinkedList<T>::ConstIterator::ConstIterator(const Iterator& it) : current(it.getCurrent()) {}
-
-template <typename T>
-const T& DoublyLinkedList<T>::ConstIterator::operator*() const {
-    if (!current) throw std::invalid_argument("Dereferencing null const iterator");
-    return current->data;
-}
-
-template <typename T>
-const T* DoublyLinkedList<T>::ConstIterator::operator->() const {
-    if (!current) throw std::invalid_argument("Dereferencing null const iterator");
-    return &(current->data);
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator& DoublyLinkedList<T>::ConstIterator::operator++() {
-    if (current) current = current->next;
-    return *this;
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::ConstIterator::operator++(int) {
-    ConstIterator temp = *this;
-    ++(*this);
-    return temp;
-}
-
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator& DoublyLinkedList<T>::ConstIterator::operator--() {
-    if (current && current->prev) {
-        current = current->prev;
+    if (current->next) {
+        current->next->prev = current->prev;
     }
     else {
-        throw std::runtime_error("Decrementing null const iterator");
+        tail = current->prev;
     }
-    return *this;
+
+    delete current;
+    size--;
+    return true;
 }
 
-template <typename T>
-typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::ConstIterator::operator--(int) {
-    ConstIterator temp = *this;
-    --(*this);
-    return temp;
+// リストの先頭のイテレータを返す関数
+// 期待結果: リストの先頭のイテレータを返す
+// 戻り値: リストの先頭のイテレータ
+template<typename T>
+typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::begin() {
+    return Iterator(head, this);
 }
 
-template <typename T>
-bool DoublyLinkedList<T>::ConstIterator::operator==(const ConstIterator& other) const {
-    return current == other.current;
+// リストの先頭のイテレータを返す関数（const版）
+// 期待結果: リストの先頭のイテレータを返す
+// 戻り値: リストの先頭のイテレータ
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::begin() const {
+    return ConstIterator(head, this);
 }
 
-template <typename T>
-bool DoublyLinkedList<T>::ConstIterator::operator!=(const ConstIterator& other) const {
-    return current != other.current;
+// リストの末尾のイテレータを返す関数
+// 期待結果: リストの末尾のイテレータを返す
+// 戻り値: リストの末尾のイテレータ
+template<typename T>
+typename DoublyLinkedList<T>::Iterator DoublyLinkedList<T>::end() {
+    return Iterator(nullptr, this);
 }
 
-template <typename T>
-const Node<T>* DoublyLinkedList<T>::ConstIterator::getCurrent() const {
-    return current;
+// リストの末尾のイテレータを返す関数（const版）
+// 期待結果: リストの末尾のイテレータを返す
+// 戻り値: リストの末尾のイテレータ
+template<typename T>
+typename DoublyLinkedList<T>::ConstIterator DoublyLinkedList<T>::end() const {
+    return ConstIterator(nullptr, this);
 }
 
-#endif // DLL_INL
+// DoublyLinkedList のデストラクタ
+// 期待結果: リストの全ノードが削除される
+template<typename T>
+DoublyLinkedList<T>::~DoublyLinkedList() {
+    while (head) {
+        Delete(begin());
+    }
+}
