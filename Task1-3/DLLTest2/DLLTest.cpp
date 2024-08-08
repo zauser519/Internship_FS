@@ -1,902 +1,951 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include "DLL.h"
+#include <utility>
+#include <string>
 
 using PerformanceData = std::pair<int, std::string>;
 
-// テスト項目 0: リストが空である場合の戻り値
-// インターフェース: データ数の取得
-TEST(DoublyLinkedListTest, IsEmptyInitially) {
+// GetSize 関数のテスト: リストが空の場合
+// 期待結果: リストのサイズが 0 であることを確認
+TEST(GetSizeTest, TestGetSizeWhenEmpty) {
     DoublyLinkedList<PerformanceData> list;
-    EXPECT_EQ(list.getSize(), 0);
+    EXPECT_EQ(0, list.GetSize());
 }
 
-// テスト項目 1: リスト末尾への挿入を行った際の戻り値
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertAtEnd) {
+// GetSize 関数のテスト: 末尾に挿入した後
+// 期待結果: リストのサイズが 1 であることを確認
+TEST(GetSizeTest, TestGetSizeAfterInsertAtEnd) {
     DoublyLinkedList<PerformanceData> list;
-    auto it = list.end();
-    bool result = list.insert(it, { 10, "user1" });
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 1);
-    it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    EXPECT_EQ(1, list.GetSize());
 }
 
-// テスト項目 2: リスト末尾への挿入が失敗した際の戻り値
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InserAtEndFailed) {
+// GetSize 関数のテスト: 挿入が失敗した場合
+// 期待結果: リストのサイズが変わらないことを確認
+TEST(GetSizeTest, TestGetSizeAfterPushFailed) {
     DoublyLinkedList<PerformanceData> list1;
-    PerformanceData data{ 10, "user1" };
-    list1.addNode(data);
+    PerformanceData data1 = { 10, "User" };
+    list1.Insert(list1.end(), data1);
 
     DoublyLinkedList<PerformanceData> list2;
-    PerformanceData data1{ 20, "user2" };
-    list2.addNode(data1);
+    PerformanceData data2 = { 20, "User1" };
+    list2.Insert(list2.end(), data2);
 
-    auto it = list2.end(); // list2のendイテレータを取得
-    PerformanceData data2{ 30, "user3" };
-    bool result = list1.insert(it, data2); // list1に対してlist2のイテレータを使って挿入を試みる
+    DoublyLinkedList<PerformanceData>::Iterator it = list2.end();
+    PerformanceData data3 = { 30, "User2" };
+    list1.Insert(it, data3);
 
-    EXPECT_FALSE(result); // 挿入が失敗することを確認
-    EXPECT_EQ(list1.getSize(), 1); // list1のデータ数が1のままであることを確認
+    EXPECT_EQ(1, list1.GetSize());
 }
 
-// テスト項目 3: データの挿入を行った際の戻り値
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, ReturnValueOnInsert) {
+// GetSize 関数のテスト: 先頭に挿入した後
+// 期待結果: リストのサイズが 1 であることを確認
+TEST(GetSizeTest, TestGetSizeAfterInsert) {
     DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    bool result = list.addNode(data);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 1);
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.begin(), data);
+    EXPECT_EQ(1, list.GetSize());
 }
 
-// テスト項目 4: データの挿入に失敗した際の戻り値
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, ReturnValueOnInsertFailure) {
-    DoublyLinkedList<PerformanceData> list;
-    bool result = false;
-    try {
-        PerformanceData data{ 10, "user1" };
-        throw std::bad_alloc();
-        result = list.addNode(data);
-    }
-    catch (const std::bad_alloc&) {
-        result = false;
-    }
-
-    EXPECT_FALSE(result);
-    EXPECT_EQ(list.getSize(), 0);
-}
-
-// テスト項目 5: データの削除を行った際の戻り値
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, ReturnValueOnDelete) {
-    DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    list.addNode(data);
-    auto it = list.begin();
-    bool result = list.deleteNode(it);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 0);
-}
-
-// テスト項目 6: データの削除が失敗した際の戻り値
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, ReturnValueOnDeleteFailure) {
-    DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    list.addNode(data);
-
-    typename DoublyLinkedList<PerformanceData>::Iterator invalidIt(nullptr);
-    bool result = list.deleteNode(invalidIt);
-    EXPECT_FALSE(result);
-    EXPECT_EQ(list.getSize(), 1);
-}
-
-// テスト項目 7: リストが空である場合に、データの削除を行った際の戻り値
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, ReturnValueOnDeleteFromEmptyList) {
-    DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    auto it = list.begin();
-    bool result = list.deleteNode(it);
-    EXPECT_FALSE(result);
-}
-
-// テスト項目 8: constのメソッドであるか
-// インターフェース: constメソッド
-TEST(DoublyLinkedListTest, ConstMethodVerification) {
-    const DoublyLinkedList<PerformanceData> list;
-    EXPECT_EQ(list.getSize(), 0);
-}
-
-// テスト項目 9: リストが空である場合に、挿入した際の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertWhenEmpty) {
-    DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    list.addNode(data);
-    EXPECT_EQ(list.getSize(), 1);
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 10: リストに複数の要素がある場合に、先頭イテレータを渡して、挿入した際の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertAtBeginIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 20, "user2" });
-    list.addNode({ 30, "user3" });
-    auto it = list.begin();
-    PerformanceData data{ 10, "user1" };
-    list.insert(it, data);
-
-    EXPECT_EQ(list.getSize(), 3);
-
-    it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-    ++it;
-    EXPECT_EQ(it->first, 30);
-    EXPECT_EQ(it->second, "user3");
-}
-
-// テスト項目 11: リストに複数の要素がある場合に、末尾イテレータを渡して、挿入した際の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertAtEndIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-
-    auto it = list.end();
-    list.insert(it, { 30, "user3" });
-
-    EXPECT_EQ(list.getSize(), 3);
-
-    it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-    ++it;
-    EXPECT_EQ(it->first, 30);
-    EXPECT_EQ(it->second, "user3");
-}
-
-// テスト項目 12: リストに複数の要素がある場合に、先頭でも末尾でもないイテレータを渡して挿入した際の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertAtMiddleIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 30, "user3" });
-    auto it = list.begin();
-    ++it; // Move to the middle
-    list.insert(it, { 20, "user2" });
-
-    EXPECT_EQ(list.getSize(), 3);
-
-    it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-    ++it;
-    EXPECT_EQ(it->first, 30);
-    EXPECT_EQ(it->second, "user3");
-}
-
-// テスト項目 13: ConstIteratorを指定して挿入を行った際の挙動
-// インターフェース: データの挿入
-TEST(DoublyLinkedListTest, InsertUsingConstIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto it = constList.begin();
-    EXPECT_NO_THROW(list.insert(it, { 20, "user2" }));
-    EXPECT_EQ(list.getSize(), 2);
-    auto iter = list.begin();
-    EXPECT_EQ(iter->first, 20);
-    ++iter;
-    EXPECT_EQ(iter->first, 10);
-}
-
-// テスト項目 14: 不正なイテレータを渡して、挿入した場合の挙動
-TEST(DoublyLinkedListTest, TestInsertInvalid) {
+// GetSize 関数のテスト: 挿入が失敗した場合
+// 期待結果: リストのサイズが変わらないことを確認
+TEST(GetSizeTest, TestGetSizeAfterInsertFailed) {
     DoublyLinkedList<PerformanceData> list1;
-    PerformanceData data1{ 10, "user1" };
-    list1.addNode(data1);
+    PerformanceData data1 = { 10, "User" };
+    list1.Insert(list1.end(), data1);
 
     DoublyLinkedList<PerformanceData> list2;
-    PerformanceData data2{ 20, "user2" };
-    list2.addNode(data2);
+    PerformanceData data2 = { 20, "User1" };
+    list2.Insert(list2.end(), data2);
 
-    auto it = list2.begin();
-    PerformanceData data3{ 30, "user3" };
-    bool success = list1.insert(it, data3);
+    DoublyLinkedList<PerformanceData>::Iterator it = list2.begin();
+    PerformanceData data3 = { 30, "User2" };
+    list1.Insert(it, data3);
 
-    // 挿入が失敗することを確認
-    EXPECT_FALSE(success);
-    EXPECT_EQ(list1.getSize(), 1);
+    EXPECT_EQ(1, list1.GetSize());
 }
 
-// テスト項目 15: 非constのメソッドであるか
-// インターフェース: 非constメソッド
-TEST(DoublyLinkedListTest, NonConstMethods) {
-#ifndef CONST_METHOD_CHECK
+// GetSize 関数のテスト: 削除した後
+// 期待結果: リストのサイズが 0 であることを確認
+TEST(GetSizeTest, TestGetSizeAfterDelete) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    it->first = 20;
-    EXPECT_EQ(it->first, 20);
-#else
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    list.Delete(list.begin());
+    EXPECT_EQ(0, list.GetSize());
+}
+
+// GetSize 関数のテスト: 削除が失敗した場合
+// 期待結果: リストのサイズが変わらないことを確認
+TEST(GetSizeTest, TestGetSizeAfterDeleteFailed) {
+    DoublyLinkedList<PerformanceData> list;
+    list.Delete(list.begin());
+    EXPECT_EQ(0, list.GetSize());
+}
+
+// GetSize 関数のテスト: 空のリストから削除した場合
+// 期待結果: リストのサイズが変わらないことを確認
+TEST(GetSizeTest, TestGetSizeWhenDeleteEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    list.Delete(list.begin());
+    EXPECT_EQ(0, list.GetSize());
+}
+
+// GetSize 関数のテスト: const の場合
+// 期待結果: リストのサイズが 0 であることを確認
+TEST(GetSizeTest, TestGetSizeWhenConst) {
+#if defined Macro
     const DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-#endif
-}
-
-// テスト項目 16: リストが空である場合に、削除を行った際の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteWhenEmpty) {
-    DoublyLinkedList<PerformanceData> list;
-    PerformanceData data{ 10, "user1" };
-    auto it = list.begin();
-    bool result = list.deleteNode(it);
-    EXPECT_FALSE(result);
-}
-
-// テスト項目 17: リストに複数の要素がある場合に、先頭イテレータを渡して、削除した際の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteAtBeginIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    bool result = list.deleteNode(it);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 1);
-}
-
-// テスト項目 18: リストに複数の要素がある場合に、末尾イテレータを渡して、削除した際の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteAtEndIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    EXPECT_NE(it.getCurrent(), nullptr);
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-
-    bool result = list.deleteNode(it);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 1);
-
-    it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 19: リストに複数の要素がある場合に、先頭でも末尾でもないイテレータを渡して削除した際の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteAtMiddleIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    list.addNode({ 30, "user3" });
-    auto it = list.begin();
-    ++it;
-    bool result = list.deleteNode(it);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 2);
-}
-
-// テスト項目 20: ConstIteratorを指定して削除を行った際の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteUsingConstIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto it = constList.begin();
-    EXPECT_NO_THROW(list.deleteNode(it));
-    EXPECT_EQ(list.getSize(), 1);
-    auto iter = list.begin();
-    EXPECT_EQ(iter->first, 20);
-}
-
-// テスト項目 21: 不正なイテレータを渡して、削除した場合の挙動
-// インターフェース: データの削除
-TEST(DoublyLinkedListTest, DeleteUsingInvalidIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    typename DoublyLinkedList<PerformanceData>::Iterator invalidIt(nullptr);
-    EXPECT_FALSE(list.deleteNode(invalidIt));
-}
-
-// テスト項目 22: 非constのメソッドであるか
-// インターフェース: 非constメソッド
-TEST(DoublyLinkedListTest, NonConstMethodsDelete) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    bool result = list.deleteNode(it);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(list.getSize(), 0);
-}
-
-// テスト項目 23: リストが空である場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenEmpty) {
-    DoublyLinkedList<PerformanceData> list;
-    auto it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 24: リストに要素が一つある場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenOneElement) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 25: リストに二つ以上の要素がある場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenMultipleElements) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 26: データの挿入を行った後に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallAfterInsert) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 27: データの削除を行った後に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallAfterDelete) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    list.deleteNode(it);
-    it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 28: constのリストから、ConstIteratorでないIteratorの取得が行えないかをチェック
-// インターフェース: イテレータ
-#define CONST_METHOD_CHECK
-TEST(DoublyLinkedListTest, CannotGetNonConstIteratorFromConstList) {
-#if defined(CONST_METHOD_CHECK)
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 1, "user1" });
-    list.addNode({ 2, "user2" });
-    list.addNode({ 3, "user3" });
-    const DoublyLinkedList<PerformanceData> constList(list);
-    // const リストから非 const イテレータを取得できません
-    // // コメントを外すとコンパイルに失敗するはずです
-    // // typename DoublyLinkedList<PerformanceData>::Iterator it = constList.begin(); // コンパイル エラーを確認するには、この行のコメントを外します
-#endif // CONST_METHOD_CHECK
+    EXPECT_EQ(0, list.GetSize());
+#endif 
     SUCCEED();
 }
 
-// テスト項目 29: リストが空である場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenEmptyAgain) {
+// Insert 関数のテスト: 空のリストに挿入
+// 期待結果: 挿入に成功し、true を返すことを確認
+TEST(InsertTest, TestInsertToEmpty) {
     DoublyLinkedList<PerformanceData> list;
-    auto it = list.begin();
-    EXPECT_EQ(it, list.end());
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    bool successBegin = list.Insert(list.begin(), data);
+    bool successEnd = list.Insert(list.end(), data);
+    EXPECT_TRUE(successBegin);
+    EXPECT_TRUE(successEnd);
 }
 
-// テスト項目 30: リストに要素が一つある場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenOneElementAgain) {
+// Insert 関数のテスト: 先頭に挿入
+// 期待結果: 挿入に成功し、true を返すことを確認
+TEST(InsertTest, TestInsertAtBegin) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    bool success = list.Insert(list.begin(), data2);
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 31: リストに二つ以上の要素がある場合に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWhenMultipleElementsAgain) {
+// Insert 関数のテスト: 末尾に挿入
+// 期待結果: 挿入に成功し、true を返すことを確認
+TEST(InsertTest, TestInsertAtEnd) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    bool success = list.Insert(list.end(), data2);
+    EXPECT_TRUE(success);
+}
+
+// Insert 関数のテスト: 指定位置に挿入
+// 期待結果: 挿入に成功し、true を返すことを確認
+TEST(InsertTest, TestInsert) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
     ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
 
-// テスト項目 32: データの挿入を行った後に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallAfterInsertAgain) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
+    PerformanceData data3 = { 30, "User2" };
+    bool success = list.Insert(it, data3);
+    EXPECT_TRUE(success);
 
-// テスト項目 33: データの削除を行った後に、呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallAfterDeleteAgain) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    list.deleteNode(it);
     it = list.begin();
-    EXPECT_EQ(it, list.end());
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data3.first, (*it).first);
+    EXPECT_EQ(data3.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
 }
 
-// テスト項目 34: ConstIteratorから取得した要素に対して、値の代入が行えないかをチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CannotAssignValueToElementFromConstIterator) {
-#if defined(CONST_METHOD_CHECK)
+// Insert 関数のテスト: const イテレータで挿入
+// 期待結果: 挿入に成功し、true を返すことを確認
+TEST(InsertTest, TestInsertWhenConst) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto it = constList.begin();
-    // 要素を const イテレータで変更できないようにします
-    // // it->first = 20; // この行のコメントを解除してコンパイル エラーを確認します
-#endif // CONST_METHOD_CHECK
-    SUCCEED();
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    DoublyLinkedList<PerformanceData>::Iterator it(nullptr, nullptr);
+    it.current = cit.current;
+    it.list = cit.list;
+    PerformanceData data = { 10, "User" };
+    bool success = list.Insert(it, data);
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 35: constのメソッドであるか
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, IsConstMethod) {
+// Insert 関数のテスト: 無効な位置に挿入
+// 期待結果: 挿入に失敗し、false を返すことを確認
+TEST(InsertTest, TestInsertInvalid) {
+    DoublyLinkedList<PerformanceData> list1;
+    PerformanceData data1 = { 10, "User" };
+    list1.Insert(list1.end(), data1);
+
+    DoublyLinkedList<PerformanceData> list2;
+    PerformanceData data2 = { 20, "User1" };
+    list2.Insert(list2.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list2.begin();
+    PerformanceData data3 = { 30, "User2" };
+    bool success = list1.Insert(it, data3);
+    EXPECT_TRUE(!success);
+}
+
+// const リストへの挿入テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestInsertWhenConst) {
+#if defined Macro
     const DoublyLinkedList<PerformanceData> list;
-    auto it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 36: リストの参照がない状態で呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWithNoListReference) {
-    typename DoublyLinkedList<PerformanceData>::Iterator it(nullptr);
-    EXPECT_THROW(it->first, std::invalid_argument);
-}
-
-// テスト項目 37: Iteratorから取得した要素に対して、値の代入が行えるかをチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, AssignValueToElementFromIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    it->first = 20;
-    EXPECT_EQ(it->first, 20);
-}
-
-// テスト項目 38: リストが空の際の、先頭イテレータに対して呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallOnHeadIteratorWhenEmpty) {
-    DoublyLinkedList<PerformanceData> list;
-    auto it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 39: 末尾イテレータに対して呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallOnTailIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.end();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 40: リストの参照がない状態で呼び出した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CallWithNoListReferenceAgain) {
-    typename DoublyLinkedList<PerformanceData>::Iterator it(nullptr);
-    EXPECT_THROW(it->first, std::invalid_argument);
-}
-
-// テスト項目 41: 前置インクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PreIncrementOperator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    auto& itRef = ++it;
-    EXPECT_EQ(itRef->first, 20);
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 42: 後置インクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PostIncrementOperator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    auto itPrev = it++;
-    EXPECT_EQ(itPrev->first, 10);
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 43: 前置デクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PreDecrementOperator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    auto& itRef = --it;
-    EXPECT_EQ(itRef->first, 10);
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 44: 後置デクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PostDecrementOperator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    auto itPrev = it--;
-    EXPECT_EQ(itPrev->first, 20);
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 45: ConstIteratorから、Iteratorのコピーが作成されないかをチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CannotCopyConstIteratorToIterator) {
-#if defined(CONST_METHOD_CHECK)
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 1, "user1" });
-    list.addNode({ 2, "user2" });
-    list.addNode({ 3, "user3" });
-    const DoublyLinkedList<PerformanceData> constList(list);
-    auto constIt = constList.begin();
-    // コメントを外すとコンパイルに失敗するはずです
-    // // typename DoublyLinkedList<PerformanceData>::Iterator it = constIt; // コンパイルエラーをチェックするにはこの行のコメントを外します
-#endif // CONST_METHOD_CHECK
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+#endif 
     SUCCEED();
 }
 
-// テスト項目 46: コピーコンストラクト後の値がコピー元と等しいことをチェック
-// インターフェース: コピーコンストラクタ
-TEST(DoublyLinkedListTest, CopyConstructorEquality) {
+// Delete 関数のテスト: 空のリストから削除
+// 期待結果: 削除に失敗し、false を返すことを確認
+TEST(DeleteTest, TestDeleteFromEmpty) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    DoublyLinkedList<PerformanceData> copyList = list;
-    auto it = copyList.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    bool successBegin = list.Delete(list.begin());
+    bool successEnd = list.Delete(list.end());
+    EXPECT_TRUE(!successBegin);
+    EXPECT_TRUE(!successEnd);
 }
 
-// テスト項目 47: IteratorにConstIteratorを代入できない事をチェック
-// インターフェース: 代入演算子
-TEST(DoublyLinkedListTest, ConstIteratorCannotAssignToIterator) {
+// Delete 関数のテスト: 先頭のノードを削除
+// 期待結果: 削除に成功し、true を返すことを確認
+TEST(DeleteTest, TestDeleteAtBegin) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto constIt = constList.begin();
-    EXPECT_FALSE((std::is_convertible<typename DoublyLinkedList<PerformanceData>::ConstIterator, typename DoublyLinkedList<PerformanceData>::Iterator>::value));
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    bool success = list.Delete(list.begin());
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 48: 代入後の値がコピー元と等しいことをチェック
-// インターフェース: 代入演算子
-TEST(DoublyLinkedListTest, AssignmentEquality) {
+// Delete 関数のテスト: 末尾のノードを削除
+// 期待結果: 削除に失敗し、false を返すことを確認
+TEST(DeleteTest, TestDeleteAtEnd) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    DoublyLinkedList<PerformanceData> copyList;
-    copyList = list;
-    auto it = copyList.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    bool success = list.Delete(list.end());
+    EXPECT_TRUE(!success);
 }
 
-// テスト項目 49: リストが空の状態での先頭イテレータと末尾イテレータを比較した際の挙動をチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareHeadAndTailIteratorWhenEmpty) {
+// Delete 関数のテスト: 指定位置のノードを削除
+// 期待結果: 削除に成功し、true を返すことを確認
+TEST(DeleteTest, TestDelete) {
     DoublyLinkedList<PerformanceData> list;
-    auto headIt = list.begin();
-    auto tailIt = list.end();
-    EXPECT_EQ(headIt, tailIt);
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    ++it;
+
+    bool success = list.Delete(it);
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 50: 同一のイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareSameIterator) {
+// Delete 関数のテスト: const イテレータで削除
+// 期待結果: 削除に成功し、true を返すことを確認
+TEST(DeleteTest, TestDeleteWhenConst) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    DoublyLinkedList<PerformanceData>::Iterator it(nullptr, nullptr);
+    it.current = cit.current;
+    it.list = cit.list;
+
+    bool success = list.Delete(it);
+    EXPECT_TRUE(success);
+}
+
+// Delete 関数のテスト: 無効な位置のノードを削除
+// 期待結果: 削除に失敗し、false を返すことを確認
+TEST(DeleteTest, TestDeleteInvalid) {
+    DoublyLinkedList<PerformanceData> list1;
+    PerformanceData data1 = { 10, "User" };
+    list1.Insert(list1.end(), data1);
+
+    DoublyLinkedList<PerformanceData> list2;
+    PerformanceData data2 = { 20, "User1" };
+    list2.Insert(list2.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list2.begin();
+    bool success = list1.Delete(it);
+    EXPECT_TRUE(!success);
+}
+
+// const リストの削除テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestDeleteWhenConst) {
+#if defined Macro
+    const DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    list.Delete(list.end());
+#endif 
+    SUCCEED();
+}
+
+// イテレータの begin 関数テスト: リストが空の場合
+// 期待結果: begin と end が等しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    EXPECT_EQ(it, list.end());
+}
+
+// イテレータの begin 関数テスト: リストに要素が一つの場合
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenOneElement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// イテレータの begin 関数テスト: リストに複数の要素がある場合
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenMultipleElements) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+}
+
+// イテレータの begin 関数テスト: 挿入後
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginAfterInsert) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// イテレータの begin 関数テスト: 削除後
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginAfterDelete) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    list.Delete(list.begin());
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+}
+
+// const イテレータの begin 関数テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestBeginWhenConst) {
+#if defined Macro
+    const DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+#endif 
+    SUCCEED();
+}
+
+// const イテレータの begin 関数テスト: リストが空の場合
+// 期待結果: begin と end が等しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenEmptyWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    EXPECT_EQ(cit, list.end());
+}
+
+// const イテレータの begin 関数テスト: リストに要素が一つの場合
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenOneElementWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    EXPECT_EQ(data.first, (*cit).first);
+    EXPECT_EQ(data.second, (*cit).second);
+}
+
+// const イテレータの begin 関数テスト: リストに複数の要素がある場合
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginWhenMultipleElementsWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    EXPECT_EQ(data1.first, (*cit).first);
+    EXPECT_EQ(data1.second, (*cit).second);
+}
+
+// const イテレータの begin 関数テスト: 挿入後
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginAfterInsertWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    EXPECT_EQ(data.first, (*cit).first);
+    EXPECT_EQ(data.second, (*cit).second);
+}
+
+// const イテレータの begin 関数テスト: 削除後
+// 期待結果: 先頭のデータが正しいことを確認
+TEST(BeginIteratorTest, TestBeginAfterDeleteWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    list.Delete(list.begin());
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+    EXPECT_EQ(data2.first, (*cit).first);
+    EXPECT_EQ(data2.second, (*cit).second);
+}
+
+// const イテレータの begin 関数テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestBeginWhenConstWhenConst) {
+#if defined Macro
+    const DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
+#endif 
+    SUCCEED();
+}
+
+// イテレータの end 関数テスト: リストが空の場合
+// 期待結果: end と begin が等しいことを確認
+TEST(EndIteratorTest, TestEndWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+    EXPECT_EQ(it, list.begin());
+}
+
+// イテレータの end 関数テスト: リストに要素が一つの場合
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndWhenOneElement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+    --it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// イテレータの end 関数テスト: リストに複数の要素がある場合
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndWhenMultipleElements) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+    --it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+}
+
+// イテレータの end 関数テスト: 挿入後
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndAfterInsert) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+    --it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// イテレータの end 関数テスト: 削除後
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndAfterDelete) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    list.Delete(list.begin());
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+    --it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+}
+
+// const イテレータの end 関数テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestEndWhenConst) {
+#if defined Macro
+    const DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::Iterator it = list.end();
+#endif 
+    SUCCEED();
+}
+
+// const イテレータの end 関数テスト: リストが空の場合
+// 期待結果: end と begin が等しいことを確認
+TEST(EndIteratorTest, TestEndWhenEmptyWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+    EXPECT_EQ(cit, list.begin());
+}
+
+// const イテレータの end 関数テスト: リストに要素が一つの場合
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndWhenOneElementWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+    --cit;
+    EXPECT_EQ(data.first, (*cit).first);
+    EXPECT_EQ(data.second, (*cit).second);
+}
+
+// const イテレータの end 関数テスト: リストに複数の要素がある場合
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndWhenMultipleElementsWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+    --cit;
+    EXPECT_EQ(data2.first, (*cit).first);
+    EXPECT_EQ(data2.second, (*cit).second);
+}
+
+// const イテレータの end 関数テスト: 挿入後
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndAfterInsertWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+    --cit;
+    EXPECT_EQ(data.first, (*cit).first);
+    EXPECT_EQ(data.second, (*cit).second);
+}
+
+// const イテレータの end 関数テスト: 削除後
+// 期待結果: 末尾のデータが正しいことを確認
+TEST(EndIteratorTest, TestEndAfterDeleteWhenConst) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    list.Delete(list.begin());
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+    --cit;
+    EXPECT_EQ(data2.first, (*cit).first);
+    EXPECT_EQ(data2.second, (*cit).second);
+}
+
+// const イテレータの end 関数テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestEndWhenConstWhenConst) {
+#if defined Macro
+    const DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.end();
+#endif 
+    SUCCEED();
+}
+
+// イテレータのデリファレンス演算子テスト: 無効なイテレータの場合
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorDereferenceTest, TestDereferenceWhenInvalid) {
+    DoublyLinkedList<PerformanceData>::ConstIterator it(nullptr, nullptr);
+    ASSERT_DEATH(*it, ".*");
+}
+
+// イテレータの代入テスト
+// 期待結果: イテレータが指すデータが変更されることを確認
+TEST(IteratorDereferenceTest, TestIteratorAssignment) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it = list.begin();
+    (*it).first = 40;
+    (*it).second = "User3";
+    EXPECT_EQ(40, (*it).first);
+    EXPECT_EQ("User3", (*it).second);
+}
+
+// const イテレータの代入テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestIteratorAssignmentWhenConst) {
+#if defined Macro
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.beginConst();
+    (*it).first = 40;
+    (*it).second = "User3";
+#endif 
+    SUCCEED();
+}
+
+// イテレータのデリファレンス演算子テスト: 空のリストの先頭
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorDereferenceTest, TestDereferenceAtBeginWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator it = list.begin();
+    ASSERT_DEATH(*it, ".*");
+}
+
+// イテレータのデリファレンス演算子テスト: リストの末尾
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorDereferenceTest, TestDereferenceAtEnd) {
+    DoublyLinkedList<PerformanceData> list;
+    DoublyLinkedList<PerformanceData>::ConstIterator it = list.end();
+    ASSERT_DEATH(*it, ".*");
+}
+
+// イテレータのインクリメント演算子テスト: 無効なイテレータ
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestAdvanceWhenInvalid) {
+    DoublyLinkedList<PerformanceData>::Iterator it(nullptr, nullptr);
+    ASSERT_DEATH(++it, ".*");
+}
+
+// イテレータのインクリメント演算子テスト: 空のリスト
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestAdvanceWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    auto it = list.begin();
+    ASSERT_DEATH(++it, ".*");
+}
+
+// イテレータのインクリメント演算子テスト: リストの末尾
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestAdvanceAtEnd) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it = list.end();
+    ASSERT_DEATH(++it, ".*");
+}
+
+// イテレータのインクリメント演算子テスト: 複数の要素がある場合
+// 期待結果: 次のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestAdvanceWhenMultipleElements) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it = list.begin();
+    ++it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+}
+
+// イテレータの前置インクリメント演算子テスト
+// 期待結果: 次のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestPreIncrement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it = list.begin();
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    auto cit = ++it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+    EXPECT_EQ(data2.first, (*cit).first);
+    EXPECT_EQ(data2.second, (*cit).second);
+}
+
+// イテレータの後置インクリメント演算子テスト
+// 期待結果: 次のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestPostIncrement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it = list.begin();
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    auto cit = it++;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+    EXPECT_EQ(data1.first, (*cit).first);
+    EXPECT_EQ(data1.second, (*cit).second);
+}
+
+// イテレータのデクリメント演算子テスト: 無効なイテレータ
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestBackwardWhenInvalid) {
+    DoublyLinkedList<PerformanceData>::Iterator it(nullptr, nullptr);
+    ASSERT_DEATH(--it, ".*");
+}
+
+// イテレータのデクリメント演算子テスト: 空のリストの末尾
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestBackwardFromEndWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    auto it = list.end();
+    ASSERT_DEATH(--it, ".*");
+}
+
+// イテレータのデクリメント演算子テスト: リストの先頭
+// 期待結果: プログラムが異常終了することを確認
+TEST(IteratorAdvanceTest, TestBackwardFromBegin) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it = list.begin();
+    ASSERT_DEATH(--it, ".*");
+}
+
+// イテレータのデクリメント演算子テスト: 複数の要素がある場合
+// 期待結果: 前のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestBackwardWhenMultipleElements) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it = list.end();
+    --it;
+    --it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+}
+
+// イテレータの前置デクリメント演算子テスト
+// 期待結果: 前のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestPreDecrement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it1 = list.end();
+    --it1;
+    EXPECT_EQ(data2.first, (*it1).first);
+    EXPECT_EQ(data2.second, (*it1).second);
+
+    auto it2 = --it1;
+    EXPECT_EQ(data1.first, (*it1).first);
+    EXPECT_EQ(data1.second, (*it1).second);
+    EXPECT_EQ(data1.first, (*it2).first);
+    EXPECT_EQ(data1.second, (*it2).second);
+}
+
+// イテレータの後置デクリメント演算子テスト
+// 期待結果: 前のノードに移動し、データが正しいことを確認
+TEST(IteratorAdvanceTest, TestPostDecrement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
+    auto it1 = list.end();
+    it1--;
+    EXPECT_EQ(data2.first, (*it1).first);
+    EXPECT_EQ(data2.second, (*it1).second);
+
+    auto it2 = it1--;
+    EXPECT_EQ(data1.first, (*it1).first);
+    EXPECT_EQ(data1.second, (*it1).second);
+    EXPECT_EQ(data2.first, (*it2).first);
+    EXPECT_EQ(data2.second, (*it2).second);
+}
+
+// const リストのコピーコンストラクタテスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestCopyConstructorWhenConst) {
+#if defined Macro
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.beginConst();
+    DoublyLinkedList<PerformanceData>::Iterator it(cit);
+#endif 
+    SUCCEED();
+}
+
+// イテレータのコピーコンストラクタテスト
+// 期待結果: コピー元と同じデータを指すことを確認
+TEST(IteratorCopyTest, TestCopyConstructor) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it(list.begin());
+    EXPECT_EQ((*it).first, data.first);
+    EXPECT_EQ((*it).second, data.second);
+}
+
+// const イテレータの代入テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestAssignmentWhenConst) {
+#if defined Macro
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.beginConst();
+    DoublyLinkedList<PerformanceData>::Iterator it = cit;
+#endif 
+    SUCCEED();
+}
+
+// イテレータの代入テスト
+// 期待結果: コピー元と同じデータを指すことを確認
+TEST(IteratorAssignmentTest, TestAssignment) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it = list.begin();
+    EXPECT_EQ((*it).first, data.first);
+    EXPECT_EQ((*it).second, data.second);
+}
+
+// イテレータの比較演算子テスト: 空のリストで begin と end を比較
+// 期待結果: 等しいことを確認
+TEST(IteratorComparisonTest, TestCompareBeginAndEndWhenEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    auto it1 = list.begin();
+    auto it2 = list.end();
+    bool success = it1 == it2;
+    EXPECT_TRUE(success);
+}
+
+// イテレータの比較演算子テスト: 同じイテレータを比較
+// 期待結果: 等しいことを確認
+TEST(IteratorComparisonTest, TestCompareSameIterator) {
+    DoublyLinkedList<PerformanceData> list;
     auto it1 = list.begin();
     auto it2 = list.begin();
-    EXPECT_EQ(it1, it2);
+    bool success = it1 == it2;
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 51: 異なるイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareDifferentIterator) {
+// イテレータの比較演算子テスト: 異なるイテレータを比較
+// 期待結果: 等しくないことを確認
+TEST(IteratorComparisonTest, TestCompareDifferentIterators) {
     DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it1 = list.begin();
+    auto it2 = list.end();
+    bool success = it1 != it2;
+    EXPECT_TRUE(success);
+}
+
+// イテレータの比較演算子テスト: インクリメント後のイテレータを比較
+// 期待結果: 等しくないことを確認
+TEST(IteratorComparisonTest, TestCompareAfterAdvance) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
+
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
+
     auto it1 = list.begin();
     auto it2 = list.begin();
     ++it2;
-    EXPECT_NE(it1, it2);
+    bool success = it1 != it2;
+    EXPECT_TRUE(success);
 }
 
-// テスト項目 52: リストが空の状態での先頭イテレータと末尾イテレータを比較した際の挙動をチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareHeadAndTailIteratorWhenEmptyAgain) {
+// const イテレータの比較テスト
+// 期待結果: コンパイルエラーが発生しないことを確認
+TEST(ListManualTest, TestConstIteratorComparison) {
+#if defined Macro
     DoublyLinkedList<PerformanceData> list;
-    auto headIt = list.begin();
-    auto tailIt = list.end();
-    EXPECT_EQ(headIt, tailIt);
-}
+    PerformanceData data1 = { 10, "User" };
+    list.Insert(list.end(), data1);
 
-// テスト項目 53: 同一のイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareSameIteratorAgain) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it1 = list.begin();
-    auto it2 = list.begin();
-    EXPECT_EQ(it1, it2);
-}
+    PerformanceData data2 = { 20, "User1" };
+    list.Insert(list.end(), data2);
 
-// テスト項目 54: 異なるイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareDifferentIteratorAgain) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it1 = list.begin();
-    auto it2 = list.begin();
-    ++it2;
-    EXPECT_NE(it1, it2);
-}
-
-// テスト項目 55: イテレータから取得した要素のデータメンバを更新した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, UpdateElementFromIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    it->first = 20;
-    EXPECT_EQ(it->first, 20);
-}
-
-// テスト項目 56: イテレータの先頭と末尾を比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareBeginAndEndIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto beginIt = list.begin();
-    auto endIt = list.end();
-    EXPECT_NE(beginIt, endIt);
-}
-
-// テスト項目 57: 先頭イテレータに対して前置インクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PreIncrementBeginIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 58: 先頭イテレータに対して後置インクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PostIncrementBeginIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    it++;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 59: 末尾イテレータに対して前置デクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PreDecrementEndIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 60: 末尾イテレータに対して後置デクリメントを行った際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, PostDecrementEndIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    it--;
-    --it;
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 61: ConstIteratorから取得した要素のデータメンバを更新しようとした際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, UpdateElementFromConstIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto it = constList.begin();
-    // it->first = 20;
-    EXPECT_NO_THROW(it->first);
-}
-
-// テスト項目 62: 非constのイテレータからconstイテレータに変換が行えるかをチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, ConvertNonConstIteratorToConstIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    typename DoublyLinkedList<PerformanceData>::ConstIterator constIt(it);
-    EXPECT_EQ(constIt->first, 10);
-    EXPECT_EQ(constIt->second, "user1");
-}
-
-// テスト項目 63: ConstIteratorから非constイテレータへの変換が行えないかをチェック
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CannotConvertConstIteratorToNonConstIterator) {
-#if defined(CONST_METHOD_CHECK)
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    const DoublyLinkedList<PerformanceData>& constList = list;
-    auto constIt = constList.begin();
-    // コメントを外すとコンパイルに失敗するはずです
-    // // typename DoublyLinkedList<PerformanceData>::Iterator it = constIt; // コンパイルエラーをチェックするにはこの行のコメントを外します
-#endif // CONST_METHOD_CHECK
+    const auto it1 = list.beginConst();
+    auto it2 = list.beginConst();
+    bool success = (it1 == it2);
+    EXPECT_TRUE(success);
+#endif 
     SUCCEED();
 }
 
-// テスト項目 64: 空のリストに対してイテレータを取得した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, GetIteratorFromEmptyList) {
-    DoublyLinkedList<PerformanceData> list;
-    auto it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 65: 要素の存在するリストに対してイテレータを取得した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, GetIteratorFromNonEmptyList) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    EXPECT_NE(it, list.end());
-}
-
-// テスト項目 66: リストの要素を削除した後にイテレータを取得した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, GetIteratorAfterDelete) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it = list.begin();
-    list.deleteNode(it);
-    it = list.begin();
-    EXPECT_EQ(it, list.end());
-}
-
-// テスト項目 67: リストをコピーした際の挙動
-// インターフェース: コピーコンストラクタ
-TEST(DoublyLinkedListTest, CopyList) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    DoublyLinkedList<PerformanceData> copyList = list;
-    auto it = copyList.begin();
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-
-// テスト項目 68: 空のリストをコピーした際の挙動
-// インターフェース: コピーコンストラクタ
-TEST(DoublyLinkedListTest, CopyEmptyList) {
-    DoublyLinkedList<PerformanceData> list;
-    DoublyLinkedList<PerformanceData> copyList = list;
-    auto it = copyList.begin();
-    EXPECT_EQ(it, copyList.end());
-}
-
-// テスト項目 69: 二つのリストのイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareIteratorsFromDifferentLists) {
+// 異なるリストのイテレータの比較テスト
+// 期待結果: 等しくないことを確認
+TEST(IteratorComparisonTest, TestDifferentListIterators) {
     DoublyLinkedList<PerformanceData> list1;
+    PerformanceData data1 = { 10, "User" };
+    list1.Insert(list1.end(), data1);
+
     DoublyLinkedList<PerformanceData> list2;
-    list1.addNode({ 10, "user1" });
-    list2.addNode({ 10, "user1" });
+    PerformanceData data2 = { 20, "User1" };
+    list2.Insert(list2.end(), data2);
+
     auto it1 = list1.begin();
     auto it2 = list2.begin();
-    EXPECT_NE(it1, it2);
+    bool success = it1 != it2;
+    EXPECT_TRUE(success);
 }
-
-// テスト項目 70: 同一のリストのイテレータを比較した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, CompareIteratorsFromSameList) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    auto it1 = list.begin();
-    auto it2 = list.begin();
-    EXPECT_EQ(it1, it2);
-}
-
-// テスト項目 71: イテレータを前進させた後の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, AdvanceIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.begin();
-    ++it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 72: イテレータを後退させた後の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, RetreatIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-}
-
-// テスト項目 73: 逆方向のイテレータを取得した際の挙動
-// インターフェース: イテレータ
-TEST(DoublyLinkedListTest, ReverseIterator) {
-    DoublyLinkedList<PerformanceData> list;
-    list.addNode({ 10, "user1" });
-    list.addNode({ 20, "user2" });
-    auto it = list.end();
-    --it;
-    EXPECT_EQ(it->first, 20);
-    EXPECT_EQ(it->second, "user2");
-    --it;
-    EXPECT_EQ(it->first, 10);
-    EXPECT_EQ(it->second, "user1");
-}
-#undef CONST_METHOD_CHECK
