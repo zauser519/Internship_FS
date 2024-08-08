@@ -1,4 +1,3 @@
-#include "DLL.h"
 #include <cassert>
 
 // ノードのコンストラクタ
@@ -104,6 +103,7 @@ const T* DoublyLinkedList<T>::ConstIterator::operator->() const {
 template<typename T>
 void DoublyLinkedList<T>::ConstIterator::operator=(const ConstIterator& other) {
     current = other.current;
+    list = other.list;
 }
 
 // 等価比較演算子
@@ -130,6 +130,10 @@ bool DoublyLinkedList<T>::ConstIterator::operator!=(const ConstIterator& other) 
 // 期待結果: Iterator が初期化される
 template<typename T>
 DoublyLinkedList<T>::Iterator::Iterator(Node* node, const DoublyLinkedList* list) : ConstIterator(node, list) {}
+
+
+template<typename T>
+DoublyLinkedList<T>::Iterator::Iterator(const ConstIterator& other) : ConstIterator(other) {}
 
 // 前置デクリメント演算子
 // 期待結果: イテレータが前のノードに移動する
@@ -216,11 +220,12 @@ int DoublyLinkedList<T>::GetSize() const {
     return size;
 }
 
-// 指定された位置にノードを挿入する関数
-// 引数: const Iterator& iter - 挿入位置のイテレータ
-//       const T& data - 挿入するデータ
-// 期待結果: 指定された位置にノードが挿入される
-// 戻り値: 挿入に成功した場合は true, それ以外は false
+// ノードを挿入
+// 入力: 挿入位置のイテレータ (const Iterator&), 挿入するデータ (const T&)
+// 戻り値: 挿入が成功した場合はtrue、失敗した場合はfalse
+// 失敗する状況: 
+//   - イテレータがこのリストに属していない場合
+//   - メモリ確保に失敗した場合
 template<typename T>
 bool DoublyLinkedList<T>::Insert(const Iterator& iter, const T& data) {
     Node* newNode = new Node(data);
@@ -258,6 +263,9 @@ bool DoublyLinkedList<T>::Insert(const Iterator& iter, const T& data) {
 // 引数: const Iterator& iter - 削除位置のイテレータ
 // 期待結果: 指定された位置のノードが削除される
 // 戻り値: 削除に成功した場合は true, それ以外は false
+// 失敗する状況:
+//   - イテレータがこのリストに属していない場合
+//   - イテレータが指しているノードが存在しない場合 (nullptr)
 template<typename T>
 bool DoublyLinkedList<T>::Delete(const Iterator& iter) {
     Node* current = iter.current;
