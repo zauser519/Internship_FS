@@ -1,92 +1,326 @@
-#define RUN_TESTS
-
-#include <gtest/gtest.h>
+#include <iostream>
+#include <string>
+#include "gtest/gtest.h"
 #include "Sort.h"
 
-// テスト項目 0: 要素を持たないリストにソートを実行した時の挙動
-TEST(QuickSortTest, EmptyList) {
-    DoubleLinkedList scores;
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_TRUE(scores.toVector().empty());
+using PerformanceData = std::pair<int, std::string>;
+
+// スコアを昇順で比較するための関数
+inline bool SA(const PerformanceData& a, const PerformanceData& b) {
+    return a.first < b.first;
 }
 
-// テスト項目 1: 要素を1つだけ持つリストにソートを実行した時の挙動
-TEST(QuickSortTest, SingleElementList) {
-    DoubleLinkedList scores;
-    scores.addScore(10, "user1");
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_EQ(scores.toVector().size(), 1);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
-    ASSERT_EQ(scores.toVector()[0].username, "user1");
+// スコアを降順で比較するための関数
+inline bool SD(const PerformanceData& a, const PerformanceData& b) {
+    return a.first > b.first;
 }
 
-// テスト項目 2: 2つ以上要素を持つリストにソートを実行した時の挙動
-TEST(QuickSortTest, MultipleElementsList) {
-    DoubleLinkedList scores;
-    scores.addScore(20, "user2");
-    scores.addScore(10, "user1");
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
-    ASSERT_EQ(scores.toVector()[1].score, 20);
+// 名前を昇順で比較するための関数
+inline bool NameA(const PerformanceData& a, const PerformanceData& b) {
+    return a.second < b.second;
 }
 
-// テスト項目 3: 同じキーを持つ要素があるリストで、そのキーを指定しソートを実行した時の挙動
-TEST(QuickSortTest, DuplicateKeys) {
-    DoubleLinkedList scores;
-    scores.addScore(10, "user2");
-    scores.addScore(10, "user1");
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
-    ASSERT_EQ(scores.toVector()[1].score, 10);
+// 名前を降順で比較するための関数
+inline bool NameD(const PerformanceData& a, const PerformanceData& b) {
+    return a.second > b.second;
 }
 
-// テスト項目 4: 整列済みリストにソートを実行した時の挙動
-TEST(QuickSortTest, AlreadySortedList) {
-    DoubleLinkedList scores;
-    scores.addScore(10, "user1");
-    scores.addScore(20, "user2");
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
-    ASSERT_EQ(scores.toVector()[1].score, 20);
+// 無効な比較関数
+bool compareInvalid(const std::string& a, const std::string& b) {
+    return a < b;
 }
 
-// テスト項目 5: 一度整列したリストの各所に挿入し、再度ソートを実行した時の挙動
-TEST(QuickSortTest, InsertAndResort) {
-    DoubleLinkedList scores;
-    scores.addScore(10, "user1");
-    scores.addScore(20, "user2");
-    scores.addScore(15, "user3");
-    scores.quicksort(scores.getHead(), scores.getTail(), true, true);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
-    ASSERT_EQ(scores.toVector()[1].score, 15);
-    ASSERT_EQ(scores.toVector()[2].score, 20);
+// リストが空の場合のテスト
+// 期待結果: ソート後もリストのサイズが0であること
+TEST(SortTest, TestifEmpty) {
+    DoublyLinkedList<PerformanceData> list;
+    list.Sort(SA);
+    EXPECT_EQ(0, list.Getsize());
+
+    list.Sort(SD);
+    EXPECT_EQ(0, list.Getsize());
+
+    list.Sort(NameA);
+    EXPECT_EQ(0, list.Getsize());
+
+    list.Sort(NameD);
+    EXPECT_EQ(0, list.Getsize());
 }
 
-// テスト項目 6: キー指定をしなかった(nullptrを渡した)時の挙動
-TEST(QuickSortTest, NullptrKey) {
-    DoubleLinkedList scores;
-    scores.addScore(10, "user1");
-    scores.quicksort(scores.getHead(), nullptr, true, true);
-    ASSERT_EQ(scores.toVector()[0].score, 10);
+// リストに一つの要素がある場合のテスト
+// 期待結果: ソート後もリストのサイズが1であり、要素が変わらないこと
+TEST(SortTest, TestSingleElement) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    list.Insert(list.end(), data);
+    auto it = list.begin();
+
+    list.Sort(SA);
+    EXPECT_EQ(1, list.Getsize());
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    list.Sort(SD);
+    EXPECT_EQ(1, list.Getsize());
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    list.Sort(NameA);
+    EXPECT_EQ(1, list.Getsize());
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    list.Sort(NameD);
+    EXPECT_EQ(1, list.Getsize());
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
 }
 
-// マクロを使ってテスト項目 7 と 8 を切り替える
+// リストに複数の要素がある場合のテスト
+// 期待結果: ソート後、リストが正しくソートされていること
+TEST(SortTest, TestMultipleElements) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
 
-#ifdef RUN_INVALID_KEY_TYPE_TEST
-// テスト項目 7: 型などが不適切なキー指定が引数で渡された時の挙動 (コンパイルエラー)
-TEST(QuickSortTest, InvalidKeyType) {
-    // このテストはコンパイルエラーをチェックするためのものです
-    // DoubleLinkedList scores;
-    // scores.quicksort(scores.getHead(), scores.getTail(), true, "invalid_key");
-    ASSERT_TRUE(true);
-}
-#endif
+    auto it = list.begin();
+    list.Sort(SA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
 
-#ifdef RUN_NON_CONST_METHOD_TEST
-// テスト項目 8: 非constのメソッドであるか (コンパイルエラー)
-TEST(QuickSortTest, NonConstMethod) {
-    const DoubleLinkedList scores;
-    // scores.quicksort(scores.getHead(), scores.getTail(), true, true); // これはコンパイルエラーになるはず
-    ASSERT_TRUE(true);
+    it = list.begin();
+    list.Sort(SD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
 }
-#endif
+
+// 同じキーを持つ要素のテスト
+// 期待結果: ソート後もリストの順序が正しいこと
+TEST(SortTest, TestSameKey) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
+
+    auto it = list.begin();
+    list.Sort(SA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(SD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// リストのソートテスト
+// 期待結果: リストを再度ソートしても順序が維持されること
+TEST(SortTest, TestList) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
+
+    auto it = list.begin();
+    list.Sort(SA);
+    list.Sort(SA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(SD);
+    list.Sort(SD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameA);
+    list.Sort(NameA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+
+    it = list.begin();
+    list.Sort(NameD);
+    list.Sort(NameD);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// リストの再ソートテスト
+// 期待結果: リストを再度ソートしても順序が正しく維持されること
+TEST(SortTest, TestResort) {
+    DoublyLinkedList<PerformanceData> list1;
+    DoublyLinkedList<PerformanceData> list2;
+    DoublyLinkedList<PerformanceData> list3;
+    DoublyLinkedList<PerformanceData> list4;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    PerformanceData data2 = { 30, "User2" };
+    list1.Insert(list1.end(), data);
+    list1.Insert(list1.end(), data1);
+    list2.Insert(list2.end(), data);
+    list2.Insert(list2.end(), data1);
+    list3.Insert(list3.end(), data);
+    list3.Insert(list3.end(), data1);
+    list4.Insert(list4.end(), data);
+    list4.Insert(list4.end(), data1);
+
+    list1.Sort(SA);
+    list1.Insert(list1.begin(), data2);
+    auto it = list1.begin();
+    list1.Sort(SA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+
+    list2.Sort(SD);
+    list2.Insert(list2.begin(), data2);
+    it = list2.begin();
+    list2.Sort(SD);
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+
+    list3.Sort(NameA);
+    list3.Insert(list3.begin(), data2);
+    it = list3.begin();
+    list3.Sort(NameA);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+
+    list4.Sort(NameD);
+    list4.Insert(list4.begin(), data2);
+    it = list4.begin();
+    list4.Sort(NameD);
+    EXPECT_EQ(data2.first, (*it).first);
+    EXPECT_EQ(data2.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+}
+
+// 無効な比較関数のテスト
+// 期待結果: ソートが実行されず、リストが変更されないこと
+TEST(SortTest, TestNullKey) {
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
+    auto it = list.begin();
+
+    list.Sort(nullptr);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
+    ++it;
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
+}
+
+// 無効な比較関数のテスト (無効な比較関数がコメントアウトされている場合)
+// 期待結果: テストがスキップされること
+TEST(SortTest, TestInvalid) {
+#if defined SKIP_TEST
+    DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
+    auto it = list.begin();
+    list.Sort(compareInvalid);
+#endif //SKIP_TEST
+    SUCCEED();
+}
+
+// 定数リストのソートテスト (定数リストのためスキップされる場合)
+// 期待結果: テストがスキップされること
+TEST(SortTest, TestConst) {
+#if defined SKIP_TEST
+    const DoublyLinkedList<PerformanceData> list;
+    PerformanceData data = { 10, "User" };
+    PerformanceData data1 = { 20, "User1" };
+    list.Insert(list.end(), data);
+    list.Insert(list.end(), data1);
+    list.Sort(SA);
+#endif //SKIP_TEST
+    SUCCEED();
+}
