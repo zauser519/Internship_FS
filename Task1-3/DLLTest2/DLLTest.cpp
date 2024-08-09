@@ -168,15 +168,15 @@ TEST(InsertTest, TestInsert) {
 
 // Insert 関数のテスト: const イテレータで挿入
 // 期待結果: 挿入に成功し、true を返すことを確認
-TEST(InsertTest, TestInsertWhenConst) {
+TEST(InsertTest, TestInsertWhenIterator) {
     DoublyLinkedList<PerformanceData> list;
-    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
-
     DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
+
     PerformanceData data = { 10, "User" };
-    bool success = list.Insert(it, data);
+    bool success = list.Insert(it, data);  // ConstIterator ではなく Iterator を使用して挿入します
     EXPECT_TRUE(success);
 }
+
 
 // Insert 関数のテスト: 無効な位置に挿入
 // 期待結果: 挿入に失敗し、false を返すことを確認
@@ -263,18 +263,17 @@ TEST(DeleteTest, TestDelete) {
 
 // Delete 関数のテスト: const イテレータで削除
 // 期待結果: 削除に成功し、true を返すことを確認
-TEST(DeleteTest, TestDeleteWhenConst) {
+TEST(DeleteTest, TestDeleteWhenIterator) {
     DoublyLinkedList<PerformanceData> list;
     PerformanceData data = { 10, "User" };
     list.Insert(list.end(), data);
 
-    DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
-
     DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
 
-    bool success = list.Delete(it);
+    bool success = list.Delete(it);  // Delete with Iterator, not ConstIterator
     EXPECT_TRUE(success);
 }
+
 
 // Delete 関数のテスト: 無効な位置のノードを削除
 // 期待結果: 削除に失敗し、false を返すことを確認
