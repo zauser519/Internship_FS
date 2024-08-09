@@ -131,10 +131,6 @@ bool DoublyLinkedList<T>::ConstIterator::operator!=(const ConstIterator& other) 
 template<typename T>
 DoublyLinkedList<T>::Iterator::Iterator(Node* node, const DoublyLinkedList* list) : ConstIterator(node, list) {}
 
-
-template<typename T>
-DoublyLinkedList<T>::Iterator::Iterator(const ConstIterator& other) : ConstIterator(other) {}
-
 // 前置デクリメント演算子
 // 期待結果: イテレータが前のノードに移動する
 // 戻り値: 自身の参照
