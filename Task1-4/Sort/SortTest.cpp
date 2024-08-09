@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
 #include "gtest/gtest.h"
 #include "Sort.h"
@@ -320,20 +320,16 @@ TEST(SortTest, TestNullKey) {
 
     // リストの初期状態をキャプチャする
     auto it = list.begin();
-    PerformanceData initialFirst = *it;
-    ++it;
-    PerformanceData initialSecond = *it;
 
     // null比較器を使用してソートする
     list.Sort(nullptr);
 
     // リストが変更されていないことを確認する
-    it = list.begin();
-    EXPECT_EQ(initialFirst.first, (*it).first);
-    EXPECT_EQ(initialFirst.second, (*it).second);
+    EXPECT_EQ(data.first, (*it).first);
+    EXPECT_EQ(data.second, (*it).second);
     ++it;
-    EXPECT_EQ(initialSecond.first, (*it).first);
-    EXPECT_EQ(initialSecond.second, (*it).second);
+    EXPECT_EQ(data1.first, (*it).first);
+    EXPECT_EQ(data1.second, (*it).second);
 }
 
 
