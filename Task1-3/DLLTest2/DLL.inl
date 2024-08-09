@@ -217,36 +217,34 @@ int DoublyLinkedList<T>::GetSize() const {
 }
 
 // ノードを挿入
-// 入力: 挿入位置のイテレータ (const Iterator&), 挿入するデータ (const T&)
+// 入力: 挿入位置のイテレータ (const Iterator& または ConstIterator&), 挿入するデータ (const T&)
 // 戻り値: 挿入が成功した場合はtrue、失敗した場合はfalse
-// 失敗する状況: 
-//   - イテレータがこのリストに属していない場合
-//   - メモリ確保に失敗した場合
 template<typename T>
-bool DoublyLinkedList<T>::Insert(const Iterator& iter, const T& data) {
+template<typename Iter>
+bool DoublyLinkedList<T>::Insert(const Iter& iter, const T& data) {
     Node* newNode = new Node(data);
     Node* current = iter.current;
 
     if (iter.list != this) return false;
 
-    if (current == nullptr) {
-        if (tail == nullptr) {
+    if (current == nullptr) { // Insert at end or empty list
+        if (tail == nullptr) { // Empty list
             head = tail = newNode;
         }
-        else {
+        else { // Insert at end
             tail->next = newNode;
             newNode->prev = tail;
             tail = newNode;
         }
     }
-    else {
+    else { // Insert before the current node
         newNode->next = current;
         newNode->prev = current->prev;
         if (current->prev) {
             current->prev->next = newNode;
         }
         else {
-            head = newNode;
+            head = newNode; // Insert at beginning
         }
         current->prev = newNode;
     }
@@ -256,14 +254,12 @@ bool DoublyLinkedList<T>::Insert(const Iterator& iter, const T& data) {
 }
 
 // 指定された位置のノードを削除する関数
-// 引数: const Iterator& iter - 削除位置のイテレータ
+// 引数: const Iterator& または ConstIterator& iter - 削除位置のイテレータ
 // 期待結果: 指定された位置のノードが削除される
 // 戻り値: 削除に成功した場合は true, それ以外は false
-// 失敗する状況:
-//   - イテレータがこのリストに属していない場合
-//   - イテレータが指しているノードが存在しない場合 (nullptr)
 template<typename T>
-bool DoublyLinkedList<T>::Delete(const Iterator& iter) {
+template<typename Iter>
+bool DoublyLinkedList<T>::Delete(const Iter& iter) {
     Node* current = iter.current;
 
     if (current == nullptr || iter.list != this) return false;
@@ -272,14 +268,14 @@ bool DoublyLinkedList<T>::Delete(const Iterator& iter) {
         current->prev->next = current->next;
     }
     else {
-        head = current->next;
+        head = current->next; // Deleting the first node
     }
 
     if (current->next) {
         current->next->prev = current->prev;
     }
     else {
-        tail = current->prev;
+        tail = current->prev; // Deleting the last node
     }
 
     delete current;
