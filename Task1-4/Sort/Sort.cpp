@@ -1,4 +1,4 @@
-﻿#include "Sort.h"
+#include "Sort.h"
 #include <fstream>
 #include <iostream>
 #include <string>
