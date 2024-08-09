@@ -171,8 +171,8 @@ TEST(InsertTest, TestInsert) {
 TEST(InsertTest, TestInsertWhenConst) {
     DoublyLinkedList<PerformanceData> list;
     DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
-    DoublyLinkedList<PerformanceData>::Iterator it(cit); // Use the new constructor
 
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
     PerformanceData data = { 10, "User" };
     bool success = list.Insert(it, data);
     EXPECT_TRUE(success);
@@ -269,7 +269,8 @@ TEST(DeleteTest, TestDeleteWhenConst) {
     list.Insert(list.end(), data);
 
     DoublyLinkedList<PerformanceData>::ConstIterator cit = list.begin();
-    DoublyLinkedList<PerformanceData>::Iterator it(cit); // Use the new constructor
+
+    DoublyLinkedList<PerformanceData>::Iterator it = list.begin();
 
     bool success = list.Delete(it);
     EXPECT_TRUE(success);
