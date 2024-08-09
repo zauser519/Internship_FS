@@ -107,13 +107,16 @@ public:
     // 期待結果: リストのサイズが返される
     int GetSize() const;
     // ノードを挿入
-    // 入力: 挿入位置のイテレータ (const Iterator&), 挿入するデータ (const T&)
+    // 入力: 挿入位置のイテレータ (const Iterator& または ConstIterator&), 挿入するデータ (const T&)
     // 戻り値: 挿入が成功した場合はtrue、失敗した場合はfalse
-    bool Insert(const Iterator& iter, const T& data);
+    template<typename Iter>
+    bool Insert(const Iter& iter, const T& data);
+
     // ノードを削除
-    // 入力: 削除する位置のイテレータ (const Iterator&)
+    // 入力: 削除する位置のイテレータ (const Iterator& または ConstIterator&)
     // 戻り値: 削除が成功した場合はtrue、失敗した場合はfalse
-    bool Delete(const Iterator& iter);
+    template<typename Iter>
+    bool Delete(const Iter& iter);
 
     // リストの先頭を指すイテレータを取得
     // 期待結果: 先頭ノードを指すイテレータが返される
