@@ -14,13 +14,9 @@ private:
         Node(const T& rd);
     };
 
-    // コンストラクタ
-    // 入力: ノードに格納するデータ (const T&)
-    // 期待結果: ノードが生成され、データが格納される
     Node* head; // リストの先頭ノード
     Node* tail; // リストの末尾ノード
     int size;   // リストのサイズ
-
 
 public:
     // 定数イテレータクラス
@@ -82,7 +78,6 @@ public:
         // 入力: ノード (Node*), リスト (const DoublyLinkedList*)
         // 期待結果: イテレータが生成される
         Iterator(Node* node, const DoublyLinkedList* list);
-        Iterator(const ConstIterator& other); 
 
         // イテレータを前に進める
         // 期待結果: イテレータが一つ前のノードを指すようになる
